@@ -1,16 +1,12 @@
 APPNAME = fintrack
 SOURCES = $(shell find . -type f -name '*.cc'; find . -type f -name '*.c' |xargs)
 HEADERS = $(shell find . -type f -name '*.h' |xargs)
-CXX = g++ -std=gnu++1y
+CXX = nvcc
 
 LIB = -lm -lpthread `pkg-config --libs --cflags sdl`
 
 INCLUDES = -I/usr/include -I.
-WARNINGS = -Wall -Wsign-compare -Wpointer-arith -Wcast-qual -Wcast-align
-
-OPT = -O3 -g3 -ffast-math $(INCLUDES) $(WARNINGS)
-
-#OPT = -O0 -g3 $(INCLUDES) $(WARNINGS)
+OPT = -O3 $(INCLUDES) --compiler-options "-Wall -ffast-math -Wsign-compare -Wpointer-arith -Wcast-qual -Wcast-align"
 
 all:	$(APPNAME)
 	@wc $(SOURCES) $(HEADERS)
