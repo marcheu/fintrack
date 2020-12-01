@@ -12,8 +12,7 @@ int loader::number_of_csv()
 	struct dirent *dir;
 	int count = 0;
 	d = opendir(data_dir);
-	if (!d)
-		assert(0);
+	assert(d);
 
 	while ((dir = readdir(d)) != NULL) {
 		if (dir->d_type == DT_DIR)
@@ -112,6 +111,7 @@ void loader::find_start_end_date(char* file_name, data_series &data)
 
 	data.start = min_date;
 	data.end = max_date;
+	strcpy(data.name, file_name);
 }
 
 void loader::load_all_series(std::vector<data_series> &data)
@@ -164,14 +164,13 @@ void loader::load_all_series(std::vector<data_series> &data)
 
 	// Read all the data for the range we want
 	d = opendir(data_dir);
-	if (!d)
-		assert(0);
+	assert(d);
 
 	i = 0;
 	while ((dir = readdir(d)) != NULL) {
 		if (dir->d_type == DT_DIR)
 			continue;
-		printf("loading %s ... ", dir->d_name);
+		printf("[%d] loading %s ... ", i, dir->d_name);
 		load_csv(dir->d_name, min_date, max_date, data[i]);
 		printf("got %d records\n", data[i].size);
 		i++;
