@@ -94,6 +94,7 @@ void loader::find_start_end_date(char* file_name, data_series &data)
 	int r = sscanf(dummy_line, "%d-%d-%d", &d.year, &d.month, &d.day);
 	assert(r == 3);
 	date min_date = d;
+
 	date max_date = d;
 
 	while(fgets(dummy_line, sizeof(dummy_line), f)) {
@@ -112,6 +113,7 @@ void loader::find_start_end_date(char* file_name, data_series &data)
 	data.start = min_date;
 	data.end = max_date;
 	strcpy(data.name, file_name);
+	data.name[strlen(data.name) - 4] = 0;
 }
 
 void loader::load_all_series(std::vector<data_series> &data)

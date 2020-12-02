@@ -1,5 +1,6 @@
-#include "gradient_descent.h"
+#include "stochastic_optimization.h"
 #include "monte_carlo.h"
+#include "util.h"
 
 static void randomize(portfolio &p, int size)
 {
@@ -8,10 +9,29 @@ static void randomize(portfolio &p, int size)
 	}
 }
 
-static void print(portfolio &p, std::vector<data_series> & historical_data, int size)
+static void print_portfolio(portfolio &p, std::vector<data_series> & historical_data, int size)
 {
+	printf("|");
 	for(int i = 0; i < size; i++)
-		printf("%d: %s %f\n",i, historical_data[i].name, p.proportions[i]);
+		if (p.proportions[i] >= 0.003)
+			printf("%-5s|", historical_data[i].name);
+	printf("\n|");
+	for(int i = 0; i < size; i++) {
+		if (p.proportions[i] < 0.003)
+			continue;
+
+		if (p.proportions[i] > 0.4)
+		printf(COLOR_RED);
+		else if (p.proportions[i] > 0.3)
+		printf(COLOR_YELLOW);
+		else if (p.proportions[i] > 0.1)
+		printf(COLOR_GREEN);
+
+		printf("%.3f", p.proportions[i]);
+		printf(COLOR_NORMAL);
+		printf("|");
+	}
+	printf("\n");
 }
 
 static void normalize(portfolio &p, int size)
@@ -32,8 +52,10 @@ static void make_delta(portfolio &p, int size)
 	for(int i = 0; i < size; i++)
 		p.proportions[i] = 0.f;
 
-	p.proportions[rand()%size] = 0.1f;
-	p.proportions[rand()%size] = -0.1f;
+	if ((rand()%2) == 0)
+		p.proportions[rand()%size] = 0.05f;
+	else
+		p.proportions[rand()%size] = -0.05f;
 }
 
 static void make_single_delta(portfolio &p, int index, int size)
@@ -44,10 +66,18 @@ static void make_single_delta(portfolio &p, int index, int size)
 	p.proportions[index] = 1.0f;
 }
 
+static void make_negative_delta(portfolio &p, int index, int size)
+{
+	for(int i = 0; i < size; i++)
+		p.proportions[i] = 0.f;
+
+	p.proportions[index] = -1.0f;
+}
+
 static void shrink_delta(portfolio &p, int size)
 {
 	for(int i = 0; i < size; i++)
-		p.proportions[i] = p.proportions[i] * 0.8f;
+		p.proportions[i] = p.proportions[i] * 0.6f;
 }
 
 
@@ -62,22 +92,21 @@ static float fitness_function(float expectancy, float standard_deviation)
 	float factor1 = 0.f;
 	float factor2 = 0.f;
 
-	if (expectancy < 1.6f)
-		factor1 = 1.6f - expectancy;
+	if (expectancy < 1.4f)
+		factor1 = (1.4f - expectancy) * 3;
 
 	if (standard_deviation > 0.4f)
 		factor2 = standard_deviation - 0.4f;
 
-	return expectancy - standard_deviation / 1.8f - factor1 * factor1 - factor2 * factor2;
+	return expectancy /*- standard_deviation / 1.8f*/ - factor1 - factor2;
 }
 
-void gradient_descent(std::vector<data_series> & historical_data)
+void stochastic_optimization(std::vector<data_series> & historical_data)
 {
 	portfolio p, p_new;
 	int iteration = 0;
 	int size = historical_data.size();
 
-	printf("SIZE is %d\n",size);
 	// Initialize our portfolio randomly
 	randomize(p, size);
 	normalize(p, size);
@@ -85,21 +114,24 @@ void gradient_descent(std::vector<data_series> & historical_data)
 	float fitness = MINFLOAT;
 	float expectancy, standard_deviation;
 
+	monte_carlo m(historical_data);
+
+	// initialization pass
 	while(iteration < 10) {
-		randomize(p, size);
-		normalize(p, size);
-		monte_carlo(historical_data, p, expectancy, standard_deviation);
+		randomize(p_new, size);
+		normalize(p_new, size);
+		m.run(p_new, expectancy, standard_deviation);
 		float new_fitness = fitness_function(expectancy, standard_deviation);
 		if (new_fitness > fitness) {
 			p = p_new;
 			fitness = new_fitness;
 			printf("fitness now %f\n", fitness);
+			print_portfolio(p, historical_data, size);
 		}
 		iteration ++;
-		printf("Init iteration %d done\n",iteration);
 	}
 
-	for(int all=0; all< 2;all++) {
+	// single vector up pass
 	iteration = 0;
 	while(iteration < size) {
 		portfolio delta;
@@ -111,7 +143,7 @@ do_it_again:
 		add (p_new, delta, size);
 		normalize(p_new, size);
 
-		monte_carlo(historical_data, p_new, expectancy, standard_deviation);
+		m.run(p_new, expectancy, standard_deviation);
 
 		float new_fitness = fitness_function(expectancy, standard_deviation);
 
@@ -119,17 +151,44 @@ do_it_again:
 			p = p_new;
 			fitness = new_fitness;
 			printf("fitness now %f\n", fitness);
+			print_portfolio(p, historical_data, size);
 			shrink_delta(delta, size);
 			goto do_it_again;
 		}
 
 		iteration ++;
-
-		printf("iteration %d done\n",iteration);
-	}
 	}
 
-	while(iteration < 70) {
+	// single vector down pass
+	iteration = 0;
+	while(iteration < size) {
+		portfolio delta;
+		make_negative_delta(delta, iteration, size);
+
+do_it_again_neg:
+
+		p_new = p;
+		add (p_new, delta, size);
+		normalize(p_new, size);
+
+		m.run(p_new, expectancy, standard_deviation);
+
+		float new_fitness = fitness_function(expectancy, standard_deviation);
+
+		if (new_fitness > fitness) {
+			p = p_new;
+			fitness = new_fitness;
+			printf("fitness now %f\n", fitness);
+			print_portfolio(p, historical_data, size);
+			shrink_delta(delta, size);
+			goto do_it_again_neg;
+		}
+
+		iteration ++;
+	}
+
+	// real pass
+	while(iteration < 400) {
 		portfolio delta;
 		make_delta(delta, size);
 
@@ -139,7 +198,7 @@ do_it_again2:
 		add (p_new, delta, size);
 		normalize(p_new, size);
 
-		monte_carlo(historical_data, p_new, expectancy, standard_deviation);
+		m.run(p_new, expectancy, standard_deviation);
 
 		float new_fitness = fitness_function(expectancy, standard_deviation);
 
@@ -147,15 +206,17 @@ do_it_again2:
 			p = p_new;
 			fitness = new_fitness;
 			printf("fitness now %f\n", fitness);
+			print_portfolio(p, historical_data, size);
 			shrink_delta(delta, size);
 			goto do_it_again2;
 		}
 
 		iteration ++;
 
-		printf("iteration %d done\n",iteration);
+//		printf("iteration %d done\n",iteration);
 	}
-	print(p, historical_data, size);
+	m.run(p, expectancy, standard_deviation);
+	print_portfolio(p, historical_data, size);
 	printf("exp: %f\n",expectancy);
 	printf("stddev: %f\n",standard_deviation);
 }

@@ -3,6 +3,6 @@
 
 #include "data_series.h"
 
-void gradient_descent(std::vector<data_series> & historical_data);
+void stochastic_optimization(std::vector<data_series> & historical_data);
 
 #endif

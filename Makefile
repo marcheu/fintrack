@@ -1,5 +1,5 @@
 APPNAME = fintrack
-SOURCES = $(shell find . -type f -name '*.cc'; find . -type f -name '*.c' |xargs)
+SOURCES = $(shell find . -type f -name '*.cc'; find . -type f -name '*.cu' |xargs)
 HEADERS = $(shell find . -type f -name '*.h' |xargs)
 CXX = nvcc
 

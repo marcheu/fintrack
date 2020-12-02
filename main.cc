@@ -1,4 +1,4 @@
-#include "gradient_descent.h"
+#include "stochastic_optimization.h"
 #include "includes.h"
 #include "loader.h"
 
@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 
 	l.load_all_series(data);
 
-	gradient_descent(data);
+	stochastic_optimization(data);
 
 	return 0;
 }
