@@ -8,7 +8,7 @@
 class monte_carlo {
 public:
 	monte_carlo(std::vector<data_series> & historical_data);
-	void run(portfolio &p, float &expectancy, float &standard_deviation);
+	void run(portfolio &p, float &expectancy, float &standard_deviation, int num_rounds);
 
 private:
 	std::vector<data_series> & historical_data_;

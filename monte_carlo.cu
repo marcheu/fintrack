@@ -7,7 +7,7 @@
 #include <curand_kernel.h>
 
 monte_carlo::monte_carlo(std::vector<data_series> & historical_data)
-	:historical_data_ (historical_data)
+	: historical_data_ (historical_data)
 {
 #if USE_GPU
 	int num_stocks = historical_data_.size();
@@ -35,33 +35,30 @@ __global__ void run_simulation(int seed, const int num_rounds, int num_stocks, i
 	memcpy(p, portfolio, num_stocks * sizeof(float));
 
 	const int duration = 253 * 1; // 1 years @ 253 trading days per year
-//	for(int round = 0; round < num_rounds; round++) {
+
 	int round = idx;
-		for(int i = 0; i < duration; i++) {
-			int position = curand(&state) % (num_days - 1);
+	for(int i = 0; i < duration; i++) {
+		int position = curand(&state) % (num_days - 1);
 
-			for(unsigned stock = 0; stock < num_stocks; stock++) {
-				float factor = (historical_data[stock * num_days + position + 1] / historical_data[stock * num_days + position]);
-				p[stock] *= factor;
-			}
+		for(unsigned stock = 0; stock < num_stocks; stock++) {
+			float factor = (historical_data[stock * num_days + position + 1] / historical_data[stock * num_days + position]);
+			p[stock] *= factor;
 		}
+	}
 
-		float expectancy = 0.;
-		for(unsigned stock = 0; stock < num_stocks; stock++)
-			expectancy += p[stock];
+	float expectancy = 0.;
+	for(unsigned stock = 0; stock < num_stocks; stock++)
+		expectancy += p[stock];
 
-		expectancy_list[round] = expectancy;
-//	}
-
+	expectancy_list[round] = expectancy;
 }
 
-void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation)
+void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation, int num_rounds)
 {
 #if USE_GPU
 	int num_stocks = historical_data_.size();
 	int num_days = historical_data_[0].size;
 
-	const int num_rounds = 65536;
 	float *expectancy_list;
 	cudaMallocManaged(&expectancy_list, num_rounds * sizeof(float)); 
 
@@ -72,7 +69,7 @@ void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation
 
 	// calculate expectancy
 	expectancy = 0.f;
-	for(unsigned i = 0; i < num_rounds; i++) {
+	for(int i = 0; i < num_rounds; i++) {
 //		printf("%f\n",expectancy_list[i]);
 		expectancy += expectancy_list[i];
 	}
@@ -80,7 +77,7 @@ void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation
 
 	// calculate standard deviation
 	standard_deviation = 0.f;
-	for(unsigned i = 0; i < num_rounds; i++)
+	for(int i = 0; i < num_rounds; i++)
 		standard_deviation += (expectancy_list[i] - expectancy) * (expectancy_list[i] - expectancy);
 	standard_deviation = sqrtf(standard_deviation / (float) num_rounds);
 #else
@@ -88,7 +85,7 @@ void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation
 	std::vector<float> expectancy_list;
 	portfolio p2;
 
-	for(int round = 0; round < 65536; round++) {
+	for(int round = 0; round < num_rounds; round++) {
  		p2 = p;
 
 		for(int i = 0; i < duration; i++) {
