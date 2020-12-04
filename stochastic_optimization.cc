@@ -121,27 +121,28 @@ void stochastic_optimization(std::vector<data_series> & historical_data)
 	float fitness = MINFLOAT;
 	float expectancy, standard_deviation;
 
-	monte_carlo m(historical_data);
+	monte_carlo m(historical_data, true);
 	int num_rounds = 32768;
 	m.run(p_new, expectancy, standard_deviation, num_rounds);
 	fitness = fitness_function(expectancy, standard_deviation);
+	portfolio delta;
 
 
-	for(iteration = 0; iteration < 100 + 10 * size + 500; iteration++) {
-		if (iteration < 100) {
-			randomize(p_new, size);
-			normalize(p_new, size);
-		} else if (iteration < 100 + 10 * size) {
+	for(iteration = 0; iteration < 10 * size + 500; iteration++) {
+		if (iteration < 10 * size) {
 			static int first_iteration = iteration;
 			float factor = 1.f - (float)(iteration - first_iteration)/(size * 10.f);
-			portfolio delta;
 			make_single_delta(delta, iteration % size, size, factor);
+		} else {
+			make_delta(delta, size);
+		}
+
+do_it_again:
+		if (iteration < 10 * size) {
 			p_new = p;
 			add (p_new, delta, size);
 			normalize(p_new, size);
 		} else {
-			portfolio delta;
-			make_delta(delta, size);
 			p_new = p;
 			mul (p_new, delta, size);
 			normalize(p_new, size);
@@ -154,14 +155,14 @@ void stochastic_optimization(std::vector<data_series> & historical_data)
 			fitness = new_fitness;
 			printf("fitness now %f e = %f σ = %f \n", fitness, expectancy, standard_deviation);
 			print_portfolio(p, historical_data, size);
+			goto do_it_again;
 		}
 	}
 
+	print_portfolio(p, historical_data, size);
 	for(int l = 0; l < 10; l++) {
 		m.run(p, expectancy, standard_deviation, num_rounds);
-		print_portfolio(p, historical_data, size);
-		printf("exp: %f\n",expectancy);
-		printf("stddev: %f\n",standard_deviation);
+		printf("e = %f σ = %f \n", expectancy, standard_deviation);
 	}
 }
 

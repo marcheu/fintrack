@@ -140,10 +140,6 @@ void loader::load_all_series(std::vector<data_series> &data)
 		if (dir->d_type == DT_DIR)
 			continue;
 		find_start_end_date(dir->d_name, data[i]);
-		printf("min/max %s ", dir->d_name);
-		data[i].start.print();
-		data[i].end.print();
-		printf("\n");
 		i++;
 	}
 	closedir(d);
@@ -172,7 +168,10 @@ void loader::load_all_series(std::vector<data_series> &data)
 	while ((dir = readdir(d)) != NULL) {
 		if (dir->d_type == DT_DIR)
 			continue;
-		printf("[%d] loading %s ... ", i, dir->d_name);
+		printf("[%3d] loading %5s ( ", i, data[i].name);
+		data[i].start.print();
+		data[i].end.print();
+		printf(") ... ");
 		load_csv(dir->d_name, min_date, max_date, data[i]);
 		printf("got %d records\n", data[i].size);
 		i++;

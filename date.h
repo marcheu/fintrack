@@ -52,7 +52,7 @@ public:
 	}
 
 	void print() {
-		printf("%d-%d-%d ",year, month, day);
+		printf("%4d-%02d-%02d ",year, month, day);
 	}
 };
 
