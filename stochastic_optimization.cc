@@ -50,7 +50,7 @@ static float fitness_function(float expectancy, float standard_deviation)
 	float factor2 = 0.f;
 
 	if (expectancy < 1.45f)
-		factor1 = (1.45f - expectancy) * 1.9f;
+		factor1 = (1.45f - expectancy) * 1.7f;
 	else
 		factor1 = expectancy * -0.1f;
 
@@ -66,20 +66,66 @@ static float fitness_function(float expectancy, float standard_deviation)
 	return - factor1 - factor2;*/
 }
 
-void stochastic_optimization(std::vector<data_series> & historical_data)
+static float probe(monte_carlo & m, std::vector<data_series> & historical_data, portfolio & p)
 {
-	portfolio p, p_new;
-	int iteration = 0;
-	int size = historical_data.size();
+	const int size = historical_data.size();
+	const int num_rounds = 1024;
+	float fitness = -FLT_MAX;
+	float expectancy, standard_deviation;
+
 
 	// Initialize our portfolio randomly
 	p.randomize(historical_data);
 	p.normalize();
 
-	float fitness = MINFLOAT;
+	m.run(p, expectancy, standard_deviation, num_rounds);
+	fitness = fitness_function(expectancy, standard_deviation);
+	portfolio delta;
+
+	int iteration = 0;
+	while(iteration < size * 2) {
+		portfolio p_new;
+		make_single_delta(delta, iteration % size, size, 1.0f);
+
+do_it_again:
+		p_new = p;
+		add (p_new, delta, size);
+		p_new.normalize();
+
+		m.run(p_new, expectancy, standard_deviation, num_rounds);
+		float new_fitness = fitness_function(expectancy, standard_deviation);
+		if (new_fitness > fitness) {
+			p = p_new;
+			fitness = new_fitness;
+			goto do_it_again;
+		}
+		iteration++;
+	}
+
+	return fitness;
+}
+
+void stochastic_optimization(std::vector<data_series> & historical_data)
+{
+	portfolio p, p_new;
+	int iteration = 0;
+	int size = historical_data.size();
+	float fitness = -FLT_MAX;
 	float expectancy, standard_deviation;
 
 	monte_carlo m(historical_data, true);
+
+	// Initialize with probes
+	for( int i = 0; i < 50; i++) {
+		portfolio p_new;
+		float new_fitness = probe(m, historical_data, p_new);
+
+		if (new_fitness > fitness) {
+			fitness = new_fitness;
+			p = p_new;
+			p.print(historical_data);
+		}
+	}
 
 
 	// Coarse pass
@@ -101,10 +147,10 @@ do_it_again:
 		m.run(p_new, expectancy, standard_deviation, num_rounds);
 		float new_fitness = fitness_function(expectancy, standard_deviation);
 		if (new_fitness > fitness) {
-			stagnate = 0;
 			p = p_new;
 			fitness = new_fitness;
-			printf("fitness now %f e = %f σ = %f \n", fitness, expectancy, standard_deviation);
+			printf("fitness now %f e = %f σ = %f %d %d\n", fitness, expectancy, standard_deviation, iteration, stagnate);
+			stagnate = 0;
 			p.print(historical_data);
 			goto do_it_again;
 		}
@@ -112,8 +158,9 @@ do_it_again:
 
 		stagnate++;
 		if ((stagnate == 2000) && factor > 0.001f) {
-			factor /= 2.f;
+			factor /= 2.0f;
 			stagnate = 0;
+			printf("new factor %f\n", factor);
 		}
 	}
 
