@@ -48,9 +48,10 @@ static float fitness_function(float expectancy, float standard_deviation)
 {
 	float factor1 = 0.f;
 	float factor2 = 0.f;
+	float factor3 = 0.f;
 
-	if (expectancy < 1.45f)
-		factor1 = (1.45f - expectancy) * 1.7f;
+	if (expectancy < 1.43f)
+		factor1 = (1.43f - expectancy) * 1.8f;
 	else
 		factor1 = expectancy * -0.1f;
 
@@ -59,7 +60,10 @@ static float fitness_function(float expectancy, float standard_deviation)
 	else
 		factor2 = 0.1f * standard_deviation;
 
-	return - factor1 - factor2;
+	if (standard_deviation - (expectancy - 1.0f) > 0.03f)
+		factor3 = (standard_deviation - (expectancy - 1.0f) - 0.03f) * 6.f;
+
+	return - factor1 - factor2 - factor3;
 /*
 	factor1 = 4.0f *fabs(expectancy - 1.6f) ;
 	factor2 = 0.65f * standard_deviation;
@@ -77,6 +81,7 @@ static float probe(monte_carlo & m, std::vector<data_series> & historical_data, 
 	// Initialize our portfolio randomly
 	p.randomize(historical_data);
 	p.normalize();
+	p.max_proportions();
 
 	m.run(p, expectancy, standard_deviation, num_rounds);
 	fitness = fitness_function(expectancy, standard_deviation);
@@ -91,6 +96,7 @@ do_it_again:
 		p_new = p;
 		add (p_new, delta, size);
 		p_new.normalize();
+		p_new.max_proportions();
 
 		m.run(p_new, expectancy, standard_deviation, num_rounds);
 		float new_fitness = fitness_function(expectancy, standard_deviation);
@@ -129,7 +135,7 @@ void stochastic_optimization(std::vector<data_series> & historical_data)
 
 
 	// Coarse pass
-	int num_rounds = 4096;
+	int num_rounds = 16384;
 	m.run(p, expectancy, standard_deviation, num_rounds);
 	fitness = fitness_function(expectancy, standard_deviation);
 	portfolio delta;
@@ -143,6 +149,7 @@ do_it_again:
 		p_new = p;
 		add (p_new, delta, size);
 		p_new.normalize();
+		p_new.max_proportions();
 
 		m.run(p_new, expectancy, standard_deviation, num_rounds);
 		float new_fitness = fitness_function(expectancy, standard_deviation);
@@ -175,6 +182,7 @@ do_it_again2:
 		p_new = p;
 		mul (p_new, delta, size);
 		p_new.normalize();
+		p_new.max_proportions();
 
 		m.run(p_new, expectancy, standard_deviation, num_rounds);
 		float new_fitness = fitness_function(expectancy, standard_deviation);
