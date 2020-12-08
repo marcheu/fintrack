@@ -9,11 +9,13 @@ int main(int argc, char* argv[])
 	srand(time(NULL));
 	char* read_filename, * write_filename;
 
-	bool need_optimize = false, need_read = false, need_write = false, need_evaluate = false;
+	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false;
 
 	for(int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-o"))
 			need_optimize = true;
+		else if (!strcmp(argv[i], "-l"))
+			need_learn = true;
 		else if (!strcmp(argv[i], "-r")) {
 			need_read = true;
 			i++;
@@ -42,16 +44,23 @@ int main(int argc, char* argv[])
 		p.normalize();
 	}
 
+	if (need_learn)
+		stochastic_optimization(data, p, false);
 	if (need_optimize)
-		stochastic_optimization(data);
+		stochastic_optimization(data, p, true);
 
 	if (need_evaluate) {
 		float expectancy, standard_deviation;
 		monte_carlo m(data, true);
-		int num_rounds = 32768 * 16;
-		m.run(p, expectancy, standard_deviation, num_rounds);
-		printf("Overall e = %f σ = %f \n", expectancy, standard_deviation);
+		int num_rounds = 32768 * 128;
+		//printf("Overall e = %f σ = %f \n", expectancy, standard_deviation);
 
+		for(int y = 1; y <= 10; y+=3) {
+			m.run(p, expectancy, standard_deviation, num_rounds, y * 253);
+			printf("%02d years: e = %f σ = %f e(84%%) = %f\n", y, expectancy, standard_deviation, expectancy - standard_deviation);
+		}
+
+		num_rounds = 32768 * 16;
 		for(unsigned i = 0; i < data.size(); i++) {
 			if (p.proportions[i] > 0.0f) {
 				portfolio single = p;

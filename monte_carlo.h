@@ -8,7 +8,7 @@
 class monte_carlo {
 public:
 	monte_carlo(std::vector<data_series> & historical_data, bool use_gpu);
-	void run(portfolio &p, float &expectancy, float &standard_deviation, int num_rounds);
+	void run(portfolio &p, float &expectancy, float &standard_deviation, int num_rounds, int days_back = 253 * 4 /*INT_MAX*/);
 
 private:
 	std::vector<data_series> & historical_data_;

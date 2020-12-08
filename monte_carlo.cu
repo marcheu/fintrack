@@ -17,7 +17,7 @@ monte_carlo::monte_carlo(std::vector<data_series> & historical_data, bool use_gp
 	}
 }
 
-__global__ void run_simulation(int seed, const int num_rounds, int num_stocks, int num_days, float *historical_data, float *portfolio, float *expectancy_list)
+__global__ void run_simulation(int seed, const int num_rounds, int num_stocks, int num_days, float *historical_data, int start_day, int days_back, float *portfolio, float *expectancy_list)
 {
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	curandState_t state;
@@ -36,7 +36,7 @@ __global__ void run_simulation(int seed, const int num_rounds, int num_stocks, i
 
 	int round = idx;
 	for(int i = 0; i < duration; i++) {
-		int position = curand(&state) % (num_days - 1);
+		int position = start_day + curand(&state) % (days_back - 1);
 
 		for(unsigned stock = 0; stock < num_stocks; stock++) {
 			float factor = (historical_data[stock * num_days + position + 1] / historical_data[stock * num_days + position]);
@@ -51,17 +51,20 @@ __global__ void run_simulation(int seed, const int num_rounds, int num_stocks, i
 	expectancy_list[round] = expectancy;
 }
 
-void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation, int num_rounds)
+void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation, int num_rounds, int days_back)
 {
+	int num_days = historical_data_[0].size;
+	days_back = min(num_days, days_back);
+	int start_day = num_days - days_back;
+
 	if (use_gpu_) {
 		int num_stocks = historical_data_.size();
-		int num_days = historical_data_[0].size;
 
 		float *expectancy_list;
 		cudaMallocManaged(&expectancy_list, num_rounds * sizeof(float)); 
 
 		memcpy(gpu_portfolio_, p.proportions, num_stocks * sizeof(float));
-		run_simulation<<<num_rounds / 256, 256>>>(rand(), num_rounds, num_stocks, num_days, gpu_historical_data_, gpu_portfolio_, expectancy_list);
+		run_simulation<<<num_rounds / 256, 256>>>(rand(), num_rounds, num_stocks, num_days, gpu_historical_data_, start_day, days_back, gpu_portfolio_, expectancy_list);
 
 		cudaDeviceSynchronize();
 
@@ -86,7 +89,7 @@ void monte_carlo::run(portfolio &p, float &expectancy, float &standard_deviation
 	 		p2 = p;
 
 			for(int i = 0; i < duration; i++) {
-				int position = rand() % (historical_data_[0].size - 1);
+				int position = start_day + rand() % (days_back - 1);
 	
 				for(unsigned stock = 0; stock < historical_data_.size(); stock++) {
 					float factor = (historical_data_[stock].values[position + 1] / historical_data_[stock].values[position]);

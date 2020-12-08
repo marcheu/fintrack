@@ -50,8 +50,8 @@ static float fitness_function(float expectancy, float standard_deviation)
 	float factor2 = 0.f;
 	float factor3 = 0.f;
 
-	if (expectancy < 1.43f)
-		factor1 = (1.43f - expectancy) * 1.8f;
+	if (expectancy < 1.58f)
+		factor1 = (1.58f - expectancy) * 1.8f;
 	else
 		factor1 = expectancy * -0.1f;
 
@@ -111,67 +111,70 @@ do_it_again:
 	return fitness;
 }
 
-void stochastic_optimization(std::vector<data_series> & historical_data)
+void stochastic_optimization(std::vector<data_series> & historical_data, portfolio &p, bool refine)
 {
-	portfolio p, p_new;
+	portfolio p_new;
+	portfolio delta;
 	int iteration = 0;
 	int size = historical_data.size();
 	float fitness = -FLT_MAX;
 	float expectancy, standard_deviation;
+	int num_rounds = 16384;
+	int stagnate = 0;
 
 	monte_carlo m(historical_data, true);
 
-	// Initialize with probes
-	for( int i = 0; i < 50; i++) {
-		portfolio p_new;
-		float new_fitness = probe(m, historical_data, p_new);
+	if (!refine) {
 
-		if (new_fitness > fitness) {
-			fitness = new_fitness;
-			p = p_new;
-			p.print(historical_data);
+		// Initialize with probes
+		for( int i = 0; i < 50; i++) {
+			portfolio p_new;
+			float new_fitness = probe(m, historical_data, p_new);
+
+			if (new_fitness > fitness) {
+				fitness = new_fitness;
+				p = p_new;
+				p.print(historical_data);
+			}
 		}
-	}
 
 
-	// Coarse pass
-	int num_rounds = 16384;
-	m.run(p, expectancy, standard_deviation, num_rounds);
-	fitness = fitness_function(expectancy, standard_deviation);
-	portfolio delta;
+		// Coarse pass
+		m.run(p, expectancy, standard_deviation, num_rounds);
+		fitness = fitness_function(expectancy, standard_deviation);
 
-	int stagnate = 0;
-	float factor = 0.5f;
-	while(stagnate < 2000) {
-		make_single_delta(delta, iteration % size, size, factor);
+		float factor = 0.5f;
+		while(stagnate < 2000) {
+			make_single_delta(delta, iteration % size, size, factor);
 
 do_it_again:
-		p_new = p;
-		add (p_new, delta, size);
-		p_new.normalize();
-		p_new.max_proportions();
+			p_new = p;
+			add (p_new, delta, size);
+			p_new.normalize();
+			p_new.max_proportions();
 
-		m.run(p_new, expectancy, standard_deviation, num_rounds);
-		float new_fitness = fitness_function(expectancy, standard_deviation);
-		if (new_fitness > fitness) {
-			p = p_new;
-			fitness = new_fitness;
-			printf("fitness now %f e = %f σ = %f %d %d\n", fitness, expectancy, standard_deviation, iteration, stagnate);
-			stagnate = 0;
-			p.print(historical_data);
-			goto do_it_again;
-		}
-		iteration++;
+			m.run(p_new, expectancy, standard_deviation, num_rounds);
+			float new_fitness = fitness_function(expectancy, standard_deviation);
+			if (new_fitness > fitness) {
+				p = p_new;
+				fitness = new_fitness;
+				printf("fitness now %f e = %f σ = %f %d %d\n", fitness, expectancy, standard_deviation, iteration, stagnate);
+				stagnate = 0;
+				p.print(historical_data);
+				goto do_it_again;
+			}
+			iteration++;
 
-		stagnate++;
-		if ((stagnate == 2000) && factor > 0.001f) {
-			factor /= 2.0f;
-			stagnate = 0;
-			printf("new factor %f\n", factor);
+			stagnate++;
+			if ((stagnate == 2000) && factor > 0.001f) {
+				factor /= 2.0f;
+				stagnate = 0;
+				printf("new factor %f\n", factor);
+			}
 		}
+
+		printf("============================\n");
 	}
-
-	printf("============================\n");
 
 	// Fine pass
 	stagnate = 0;
