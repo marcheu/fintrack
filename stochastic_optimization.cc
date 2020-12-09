@@ -124,6 +124,10 @@ void stochastic_optimization(std::vector<data_series> & historical_data, portfol
 
 	monte_carlo m(historical_data, true);
 
+	m.run(p, expectancy, standard_deviation, num_rounds);
+	fitness = fitness_function(expectancy, standard_deviation);
+
+
 	if (!refine) {
 
 		// Initialize with probes

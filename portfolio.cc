@@ -73,11 +73,11 @@ void portfolio::print(std::vector<data_series> historical_data)
 {
 	printf("|");
 	for(int i = 0; i < size_; i++)
-		if (proportions[i] >= 0.003)
+		if (proportions[i] >= 0.001)
 			printf("%-5s|", historical_data[i].name);
 	printf("\n|");
 	for(int i = 0; i < size_; i++) {
-		if (proportions[i] < 0.003)
+		if (proportions[i] < 0.001)
 			continue;
 
 		if (proportions[i] > 0.3)
