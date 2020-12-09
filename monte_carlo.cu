@@ -81,6 +81,7 @@ void monte_carlo::run_with_data(portfolio &p, std::vector<float> &expectancy_lis
 		for(int i = 0; i < num_rounds; i++)
 			standard_deviation += (gpu_expectancy_list[i] - expectancy) * (gpu_expectancy_list[i] - expectancy);
 		standard_deviation = sqrtf(standard_deviation / (float) num_rounds);
+		cudaFree(gpu_expectancy_list);
 	} else {
 		const int duration = 253 * 1; // 1 years @ 253 trading days per year
 		portfolio p2;
