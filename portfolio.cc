@@ -19,7 +19,10 @@ void portfolio::read(const char* file_name, std::vector<data_series> data) {
 			if (!strcmp(data[i].name, name))
 				break;
 
-		assert(i < data.size());
+		if (i == data.size()) {
+			printf("can't find %s\n", name);
+			assert(0);
+		}
 
 		proportions[i] = value;
 	}
@@ -54,19 +57,32 @@ void portfolio::normalize()
 		proportions[i] /= sum;
 }
 
-void portfolio::max_proportions()
+void portfolio::max_proportions(std::vector<data_series> historical_data)
 {
 	normalize();
 
-	bool redo = false;
+	
+
+	const float limit = 0.32f;
+
+	float over = 0.f;
+
 	for(int i = 0; i < size_; i++)
-		if (proportions[i] > 0.25f) {
-			proportions[i] = 0.25f;
-			redo = true;
+		if (proportions[i] > limit) {
+			over += (proportions[i] - limit);
+			proportions[i] = limit;
 		}
 
-	if (redo)
-		normalize();
+	while (over > 0.0001f) {
+		int rand_index = rand() % size_;
+		if (proportions[rand_index] < limit) {
+			float delta = limit - proportions[rand_index];
+			proportions[rand_index] += delta;
+			over -= delta;
+		}
+	}
+
+	normalize();
 }
 
 void portfolio::print(std::vector<data_series> historical_data)

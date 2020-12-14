@@ -15,7 +15,7 @@ public:
 
 	void randomize(std::vector<data_series> data);
 	void normalize();
-	void max_proportions();
+	void max_proportions(std::vector<data_series> historical_data);
 	void print(std::vector<data_series> historical_data);
 };
 

@@ -29,7 +29,7 @@ void print_char(float v)
 
 void print_histogram(std::vector<float> values)
 {
-	const int num_buckets = 80;
+	const int num_buckets = 50;
 	float buckets[num_buckets];
 
 	float min_value = FLT_MAX;
@@ -47,41 +47,111 @@ void print_histogram(std::vector<float> values)
 
 	printf("value range %f - %f\n", min_value, max_value);
 
+	min_value = 0.f;
+	max_value = 3.f;
+
 	for(int b = 0; b < num_buckets; b++)
 		buckets[b] = 0.f;
 
-	int expectancy_bucket = (int)((float)num_buckets * (expectancy - min_value) / (max_value - min_value));
+	int break_even_bucket = (int)((float)num_buckets * (1.0f - min_value) / (max_value - min_value));
 
 	for(unsigned i = 0; i < values.size(); i++) {
-		buckets[(int)(num_buckets * (values[i] - min_value) / (max_value - min_value))] += 0.00004f;
+		int bucket_index = (int)(num_buckets * (values[i] - min_value) / (max_value - min_value));
+		if (bucket_index >= num_buckets)
+			bucket_index = num_buckets - 1;
+		buckets[bucket_index] += 0.00012f;
 	}
 
-	float total = 0.00004f * values.size();
+	float total = 0.00012f * values.size();
 	float counted = 0.f;
 	for(int b = 0; b < num_buckets; b++) {
 		float value = buckets[b];
 		counted += value;
-		if (b < expectancy_bucket)
+		if (b < break_even_bucket)
 			printf(COLOR_RED);
+		else if (b == break_even_bucket)
+			printf(COLOR_YELLOW);
 		else
 			printf(COLOR_GREEN);
+		int printed_char = 0;
 		while(value > 0.f) {
 			print_char(value);
 			value -= 1.f;
+			printed_char ++;
 		}
+
+		while(printed_char < 120)
+		{
+			printed_char++;
+			printf(" ");
+		}
+		printf("| %.0f%% e=%f", 100.f * counted / total, (float) b / (float) num_buckets * (max_value - min_value) + min_value);
 		printf("\n");
-		if (counted > 0.98 * total)
-			break;
+/*		if (counted > 0.98 * total)
+			break;*/
 	}
 	printf(COLOR_NORMAL);
+}
+
+void print_correlation_matrix(std::vector<data_series> & data)
+{
+	std::vector<float> mean_values;
+
+	for(unsigned i = 0; i < data.size(); i++) {
+		float mean;
+
+		mean = 0.f;
+		for(int j = 0; j < data[i].size; j++)
+			mean += data[i].values[j];
+		mean /= (float) data[i].size;
+
+		mean_values.push_back(mean);
+	}
+
+	printf("=============================================\n      ");
+	for(unsigned s1 = 0; s1 < data.size(); s1++)
+		printf("%5s  ", data[s1].name);
+	printf("\n");
+	for(unsigned s1 = 0; s1 < data.size(); s1++) {
+		printf("%5s  ", data[s1].name);
+		for(unsigned s2 = 0; s2 < data.size(); s2++) {
+			float cov;
+
+			cov = 0.f;
+			for(int i = 0; i < data[0].size; i++)
+				cov += (data[s1].values[i] - mean_values[s1]) * (data[s2].values[i] - mean_values[s2]); 
+
+			float coef1 = 0.0f, coef2 = 0.0f;
+			for(int i = 0; i < data[0].size; i++)
+				coef1 += (data[s1].values[i] - mean_values[s1]) *(data[s1].values[i] - mean_values[s1]);
+			coef1 = sqrtf(coef1);
+
+			for(int i = 0; i < data[0].size; i++)
+				coef2 += (data[s2].values[i] - mean_values[s2]) *(data[s2].values[i] - mean_values[s2]);
+			coef2 = sqrtf(coef2);
+
+			cov /= (float) (coef1 * coef2);
+
+			if (cov > 0.3)
+				printf(COLOR_GREEN);
+			else if (cov < -0.3)
+				printf(COLOR_RED);
+			else
+				printf(COLOR_NORMAL);
+			printf("% .3f ", cov);
+		}
+		printf(COLOR_NORMAL);
+		printf("\n");
+	}
+	printf("=============================================\n");
 }
 
 int main(int argc, char* argv[])
 {
 	srand(time(NULL));
-	char* read_filename, * write_filename;
+	char* read_filename, * write_filename, * frontier_filename;
 
-	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false;
+	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_frontier = false;
 
 	for(int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-o"))
@@ -100,6 +170,11 @@ int main(int argc, char* argv[])
 		}
 		else if (!strcmp(argv[i], "-e"))
 			need_evaluate = true;
+		else if (!strcmp(argv[i], "-f")) {
+			need_frontier = true;
+			i++;
+			frontier_filename = argv[i];
+		}
 	}
 
 	std::vector<data_series> data;
@@ -116,6 +191,23 @@ int main(int argc, char* argv[])
 		p.normalize();
 	}
 
+	if (need_frontier) {
+		FILE* f = fopen(frontier_filename, "a");
+		portfolio single;
+		int num_rounds = 16384;
+		float expectancy, standard_deviation;
+		monte_carlo m(data, true);
+
+		for(int i = 0; i < 100000; i++) {
+			single.randomize(data);
+			single.normalize();
+			m.run(single, expectancy, standard_deviation, num_rounds);
+			fprintf(f, "%f, %f\n", expectancy, standard_deviation);
+			printf("%d/100000\n",i);
+		}
+		fclose(f);
+	}
+
 	if (need_learn)
 		stochastic_optimization(data, p, false);
 	if (need_optimize)
@@ -124,18 +216,8 @@ int main(int argc, char* argv[])
 	if (need_evaluate) {
 		float expectancy, standard_deviation;
 		monte_carlo m(data, true);
-		int num_rounds = 32768 * 128;
-		//printf("Overall e = %f σ = %f \n", expectancy, standard_deviation);
 
-		std::vector<float> values;
-		for(int y = 1; y <= 10; y += 3) {
-			m.run_with_data(p, values, expectancy, standard_deviation, num_rounds, y * 253);
-			printf("%02d years: e = %f σ = %f e(84%%) = %f\n", y, expectancy, standard_deviation, expectancy - standard_deviation);
-			print_histogram(values);
-			values.clear();
-		}
-
-		num_rounds = 32768 * 16;
+		int num_rounds = 32768 * 16;
 		for(unsigned i = 0; i < data.size(); i++) {
 			if (p.proportions[i] > 0.0f) {
 				portfolio single = p;
@@ -147,6 +229,20 @@ int main(int argc, char* argv[])
 				printf("  %5s e = %f σ = %f \n", data[i].name, expectancy, standard_deviation);
 			}
 		}
+		print_correlation_matrix(data);
+
+		num_rounds = 32768 * 128;
+		//printf("Overall e = %f σ = %f \n", expectancy, standard_deviation);
+
+		std::vector<float> values;
+		for(int i = 0; i < 4; i ++) {
+			int y = ((int[]){1, 2, 4, 10})[i];
+			m.run_with_data(p, values, expectancy, standard_deviation, num_rounds, y * 253);
+			printf("%02d years: e = %f σ = %f\n", y, expectancy, standard_deviation);
+			print_histogram(values);
+			values.clear();
+		}
+
 	}
 
 	if (need_write) {

@@ -32,11 +32,19 @@ __global__ void run_simulation(int seed, const int num_rounds, int num_stocks, i
 
 	memcpy(p, portfolio, num_stocks * sizeof(float));
 
-	const int duration = 253 * 1; // 1 years @ 253 trading days per year
+	const int duration = 253 * 1 / 2; // 1 years @ 253 trading days per year
 
 	int round = idx;
+	int position, steps;
+	steps = 0;
 	for(int i = 0; i < duration; i++) {
-		int position = start_day + curand(&state) % (days_back - 1);
+		if ((steps % 30) == 0) {
+			position = start_day + curand(&state) % (days_back - 1);
+			steps = 0;
+		} else {
+			position ++;
+			steps++;
+		}
 
 		for(unsigned stock = 0; stock < num_stocks; stock++) {
 			float factor = (historical_data[stock * num_days + position + 1] / historical_data[stock * num_days + position]);
@@ -48,7 +56,7 @@ __global__ void run_simulation(int seed, const int num_rounds, int num_stocks, i
 	for(unsigned stock = 0; stock < num_stocks; stock++)
 		expectancy += p[stock];
 
-	expectancy_list[round] = expectancy;
+	expectancy_list[round] = expectancy * expectancy;
 }
 
 void monte_carlo::run_with_data(portfolio &p, std::vector<float> &expectancy_list, float &expectancy, float &standard_deviation, int num_rounds, int days_back)
