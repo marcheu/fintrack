@@ -148,7 +148,7 @@ void print_correlation_matrix(std::vector<data_series> & data)
 int main(int argc, char* argv[])
 {
 	srand(time(NULL));
-	char* read_filename, * write_filename, * frontier_filename;
+	char* read_filename = NULL, * write_filename = NULL, * frontier_filename = NULL;
 
 	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_frontier = false;
 
