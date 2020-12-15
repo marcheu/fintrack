@@ -7,55 +7,56 @@
 const char *data_dir_etf = "financial_data/etf/";
 const char *data_dir_stock = "financial_data/stock/";
 
-static bool etf_dir = false;
-static bool stock_dir = false;
+class file_iterator {
+      public:
+	void reset (bool use_stocks) {
+		etf_dir = false;
+		stock_dir = !use_stocks;
+	} bool run (char *filename) {
+		static DIR *d = NULL;
 
-static void reset_iterator (bool use_stocks)
-{
-	etf_dir = false;
-	stock_dir = !use_stocks;
-}
+		if (!etf_dir) {
+			d = opendir (data_dir_etf);
+			assert (d);
+			etf_dir = true;
+		}
 
-static bool file_iterator (char *filename)
-{
-	static DIR *d = NULL;
+	      again:
+		struct dirent *dir = readdir (d);
 
-	if (!etf_dir) {
-		d = opendir (data_dir_etf);
-		assert (d);
-		etf_dir = true;
+		if (dir == NULL && !stock_dir) {
+			closedir (d);
+			d = opendir (data_dir_stock);
+			assert (d);
+			dir = readdir (d);
+			stock_dir = true;
+		}
+
+		if (dir != NULL) {
+			if (dir->d_type == DT_DIR)
+				goto again;
+			strcpy (filename, dir->d_name);
+			return true;
+		}
+		else {
+			closedir (d);
+			return false;
+		}
 	}
+      private:
+	bool etf_dir;
+	bool stock_dir;
 
-      again:
-	struct dirent *dir = readdir (d);
-
-	if (dir == NULL && !stock_dir) {
-		closedir (d);
-		d = opendir (data_dir_stock);
-		assert (d);
-		dir = readdir (d);
-		stock_dir = true;
-	}
-
-	if (dir != NULL) {
-		if (dir->d_type == DT_DIR)
-			goto again;
-		strcpy (filename, dir->d_name);
-		return true;
-	}
-	else {
-		closedir (d);
-		return false;
-	}
-}
+};
 
 int loader::number_of_csv (bool use_stocks)
 {
 	int count = 0;
 	char dummy_line[1024];
+	file_iterator it;
 
-	reset_iterator (use_stocks);
-	while (file_iterator (dummy_line))
+	it.reset (use_stocks);
+	while (it.run (dummy_line))
 		count++;
 
 	return count;
@@ -169,6 +170,7 @@ void loader::load_all_series (std::vector < data_series > &data, bool use_stocks
 	int num_files = number_of_csv (use_stocks);
 	int i;
 	char dummy_line[1024];
+	file_iterator it;
 
 	assert (num_files >= 1);
 
@@ -180,8 +182,8 @@ void loader::load_all_series (std::vector < data_series > &data, bool use_stocks
 
 	// For each series, find min/max dates
 	i = 0;
-	reset_iterator (use_stocks);
-	while (file_iterator (dummy_line)) {
+	it.reset (use_stocks);
+	while (it.run (dummy_line)) {
 		find_start_end_date (dummy_line, data[i]);
 		i++;
 	}
@@ -203,8 +205,8 @@ void loader::load_all_series (std::vector < data_series > &data, bool use_stocks
 
 	// Read all the data for the range we want
 	i = 0;
-	reset_iterator (use_stocks);
-	while (file_iterator (dummy_line)) {
+	it.reset (use_stocks);
+	while (it.run (dummy_line)) {
 		printf ("[%3d] loading %5s ( ", i, dummy_line);
 		data[i].start.print ();
 		data[i].end.print ();
