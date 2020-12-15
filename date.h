@@ -4,12 +4,12 @@
 #include "includes.h"
 
 class date {
-public:
+      public:
 	int year;
 	int month;
 	int day;
 
-	friend bool operator>= (const date &d1, const date &d2) {
+	friend bool operator>= (const date & d1, const date & d2) {
 		if (d1.year > d2.year)
 			return true;
 		else if (d1.year < d2.year)
@@ -25,8 +25,7 @@ public:
 		else if (d1.day < d2.day)
 			return false;
 		return true;
-	}
-	friend bool operator<= (const date &d1, const date &d2) {
+	} friend bool operator<= (const date & d1, const date & d2) {
 		if (d1.year < d2.year)
 			return true;
 		else if (d1.year > d2.year)
@@ -44,15 +43,15 @@ public:
 
 		return true;
 	}
-	friend bool operator< (const date &d1, const date &d2) {
+	friend bool operator< (const date & d1, const date & d2) {
 		return !(d1 >= d2);
 	}
-	friend bool operator> (const date &d1, const date &d2) {
+	friend bool operator> (const date & d1, const date & d2) {
 		return !(d1 <= d2);
 	}
 
-	void print() {
-		printf("%4d-%02d-%02d ",year, month, day);
+	void print () {
+		printf ("%4d-%02d-%02d ", year, month, day);
 	}
 };
 

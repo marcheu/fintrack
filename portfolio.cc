@@ -1,80 +1,82 @@
 #include "portfolio.h"
 #include "util.h"
 
-void portfolio::read(const char* file_name, std::vector<data_series> data) {
+void portfolio::read (const char *file_name, std::vector < data_series > data)
+{
 	char dummy_line[1024];
 
-	FILE* f = fopen(file_name, "rb");
+	FILE *f = fopen (file_name, "rb");
 
-	assert(f);
+	assert (f);
 
-	while(fgets(dummy_line, sizeof(dummy_line), f)) {
+	while (fgets (dummy_line, sizeof (dummy_line), f)) {
 		char name[256];
 		float value;
 		unsigned i;
-		int r = sscanf(dummy_line, "%s %f", name, &value);
-		assert(r == 2);
+		int r = sscanf (dummy_line, "%s %f", name, &value);
+		assert (r == 2);
 
-		for(i = 0; i < data.size(); i++)
-			if (!strcmp(data[i].name, name))
+		for (i = 0; i < data.size (); i++)
+			if (!strcmp (data[i].name, name))
 				break;
 
-		if (i == data.size()) {
-			printf("can't find %s\n", name);
-			assert(0);
+		if (i == data.size ()) {
+			printf ("can't find %s\n", name);
+			assert (0);
 		}
 
 		proportions[i] = value;
 	}
 
-	size_ = data.size();
+	size_ = data.size ();
 
-	fclose(f);
+	fclose (f);
 }
 
-void portfolio::write(const char* file_name) {
-	assert(0);
-}
-
-void portfolio::randomize(std::vector<data_series> data)
+void portfolio::write (const char *file_name)
 {
-	size_ = data.size();
-
-	for(int i = 0; i < size_; i++)
-		proportions[i] = (float)(rand() % 100 + 1);
+	assert (0);
 }
 
-void portfolio::normalize()
+void portfolio::randomize (std::vector < data_series > data)
+{
+	size_ = data.size ();
+
+	for (int i = 0; i < size_; i++)
+		proportions[i] = (float) (rand () % 100 + 1);
+}
+
+void portfolio::normalize ()
 {
 	float sum = 0.f;
-	for(int i = 0; i < size_; i++) {
+	for (int i = 0; i < size_; i++) {
 		if (proportions[i] < 0.f)
 			proportions[i] = 0.f;
 		sum += proportions[i];
 	}
 
-	for(int i = 0; i < size_; i++)
+	for (int i = 0; i < size_; i++)
 		proportions[i] /= sum;
 }
 
-void portfolio::max_proportions(std::vector<data_series> historical_data)
+void portfolio::max_proportions (std::vector < data_series > historical_data)
 {
-	normalize();
+	normalize ();
 
-	
+
 
 	const float limit = 0.32f;
 
 	float over = 0.f;
 
-	for(int i = 0; i < size_; i++)
+	for (int i = 0; i < size_; i++)
 		if (proportions[i] > limit) {
 			over += (proportions[i] - limit);
 			proportions[i] = limit;
 		}
 
 	while (over > 0.0001f) {
-		int rand_index = rand() % size_;
+		int rand_index = rand () % size_;
 		if (proportions[rand_index] < limit) {
 			float delta = limit - proportions[rand_index];
 			proportions[rand_index] += delta;
@@ -82,32 +84,30 @@ void portfolio::max_proportions(std::vector<data_series> historical_data)
 		}
 	}
 
-	normalize();
+	normalize ();
 }
 
-void portfolio::print(std::vector<data_series> historical_data)
+void portfolio::print (std::vector < data_series > historical_data)
 {
-	printf("|");
-	for(int i = 0; i < size_; i++)
+	printf ("|");
+	for (int i = 0; i < size_; i++)
 		if (proportions[i] >= 0.001)
-			printf("%-5s|", historical_data[i].name);
-	printf("\n|");
-	for(int i = 0; i < size_; i++) {
+			printf ("%-5s|", historical_data[i].name);
+	printf ("\n|");
+	for (int i = 0; i < size_; i++) {
 		if (proportions[i] < 0.001)
 			continue;
 
 		if (proportions[i] > 0.3)
-		printf(COLOR_RED);
+			printf (COLOR_RED);
 		else if (proportions[i] > 0.2)
-		printf(COLOR_YELLOW);
+			printf (COLOR_YELLOW);
 		else if (proportions[i] > 0.1)
-		printf(COLOR_GREEN);
+			printf (COLOR_GREEN);
 
-		printf("%.3f", proportions[i]);
-		printf(COLOR_NORMAL);
-		printf("|");
+		printf ("%.3f", proportions[i]);
+		printf (COLOR_NORMAL);
+		printf ("|");
 	}
-	printf("\n");
+	printf ("\n");
 }
-
-
