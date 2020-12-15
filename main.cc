@@ -45,7 +45,7 @@ void print_histogram(std::vector<float> values)
 
 	expectancy /= (float)values.size();
 
-	printf("value range %f - %f\n", min_value, max_value);
+	printf("Value range %f - %f\n", min_value, max_value);
 
 	min_value = 0.f;
 	max_value = 3.f;
@@ -57,6 +57,7 @@ void print_histogram(std::vector<float> values)
 
 	for(unsigned i = 0; i < values.size(); i++) {
 		int bucket_index = (int)(num_buckets * (values[i] - min_value) / (max_value - min_value));
+		// Fold the tail of the distribution.
 		if (bucket_index >= num_buckets)
 			bucket_index = num_buckets - 1;
 		buckets[bucket_index] += 0.00012f;
@@ -87,8 +88,6 @@ void print_histogram(std::vector<float> values)
 		}
 		printf("| %.0f%% e=%f", 100.f * counted / total, (float) b / (float) num_buckets * (max_value - min_value) + min_value);
 		printf("\n");
-/*		if (counted > 0.98 * total)
-			break;*/
 	}
 	printf(COLOR_NORMAL);
 }
@@ -179,7 +178,10 @@ int main(int argc, char* argv[])
 
 	std::vector<data_series> data;
 	loader l;
-	l.load_all_series(data);
+	if (need_evaluate)
+		l.load_all_series(data, true);
+	else
+		l.load_all_series(data, false);
 
 	portfolio p;
 	if (need_read) {
@@ -232,7 +234,6 @@ int main(int argc, char* argv[])
 		print_correlation_matrix(data);
 
 		num_rounds = 32768 * 128;
-		//printf("Overall e = %f σ = %f \n", expectancy, standard_deviation);
 
 		std::vector<float> values;
 		for(int i = 0; i < 4; i ++) {

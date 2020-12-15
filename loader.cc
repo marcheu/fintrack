@@ -4,23 +4,59 @@
 #include "data_series.h"
 #include "loader.h"
 
-const char* data_dir = "financial_data/";
+const char* data_dir_etf = "financial_data/etf/";
+const char* data_dir_stock = "financial_data/stock/";
 
-int loader::number_of_csv()
+static bool etf_dir = false;
+static bool stock_dir = false;
+
+static void reset_iterator(bool use_stocks)
 {
-	DIR *d;
-	struct dirent *dir;
-	int count = 0;
-	d = opendir(data_dir);
-	assert(d);
+	etf_dir = false;
+	stock_dir = !use_stocks;
+}
 
-	while ((dir = readdir(d)) != NULL) {
-		if (dir->d_type == DT_DIR)
-			continue;
-		count++;
+static bool file_iterator(char * filename)
+{
+	static DIR *d = NULL;
+
+	if (!etf_dir) {
+		d = opendir(data_dir_etf);
+		assert(d);
+		etf_dir = true;
 	}
 
-	closedir(d);
+again:
+	struct dirent *dir = readdir(d);
+
+	if (dir == NULL && !stock_dir) {
+		closedir(d);
+		d = opendir(data_dir_stock);
+		assert(d);
+		dir = readdir(d);
+		stock_dir = true;
+	}
+
+	if (dir != NULL) {
+		if (dir->d_type == DT_DIR)
+			goto again;
+		strcpy(filename, dir->d_name);
+		return true;
+	} else {
+		closedir(d);
+		return false;
+	}
+}
+
+int loader::number_of_csv(bool use_stocks)
+{
+	int count = 0;
+	char dummy_line[1024];
+
+	reset_iterator(use_stocks);
+	while(file_iterator(dummy_line))
+		count++;
+
 	return count;
 }
 
@@ -28,13 +64,19 @@ void loader::load_csv(char* file_name, date start, date end, data_series &data)
 {
 	char file_path[256];
 	char dummy_line[1024];
-	strcpy(file_path, data_dir);
+	strcpy(file_path, data_dir_etf);
 	strcat(file_path, file_name);
 	FILE* f = fopen(file_path, "rb");
 
+	if (!f) {
+		strcpy(file_path, data_dir_stock);
+		strcat(file_path, file_name);
+		f = fopen(file_path, "rb");
+	}
+
 	assert(f);
 
-	// read the header and throw it away
+	// Read the header and throw it away
 	assert(fgets(dummy_line, sizeof(dummy_line), f));
 
 	int count = 0;
@@ -54,7 +96,7 @@ void loader::load_csv(char* file_name, date start, date end, data_series &data)
 
 	rewind(f);
 
-	// read the header and throw it away
+	// Read the header and throw it away
 	assert(fgets(dummy_line, sizeof(dummy_line), f));
 
 	int i = 0;
@@ -80,13 +122,19 @@ void loader::find_start_end_date(char* file_name, data_series &data)
 {
 	char file_path[256];
 	char dummy_line[1024];
-	strcpy(file_path, data_dir);
+	strcpy(file_path, data_dir_etf);
 	strcat(file_path, file_name);
 	FILE* f = fopen(file_path, "rb");
 
+	if (!f) {
+		strcpy(file_path, data_dir_stock);
+		strcat(file_path, file_name);
+		f = fopen(file_path, "rb");
+	}
+
 	assert(f);
 
-	// read the header and throw it away
+	// Read the header and throw it away
 	assert(fgets(dummy_line, sizeof(dummy_line), f));
 
 	date d;
@@ -116,12 +164,11 @@ void loader::find_start_end_date(char* file_name, data_series &data)
 	data.name[strlen(data.name) - 4] = 0;
 }
 
-void loader::load_all_series(std::vector<data_series> &data)
+void loader::load_all_series(std::vector<data_series> &data, bool use_stocks)
 {
-	int num_files = number_of_csv();
+	int num_files = number_of_csv(use_stocks);
 	int i;
-	DIR *d;
-	struct dirent *dir;
+	char dummy_line[1024];
 
 	assert(num_files >= 1);
 
@@ -132,17 +179,12 @@ void loader::load_all_series(std::vector<data_series> &data)
 	}
 
 	// For each series, find min/max dates
-	d = opendir(data_dir);
-	assert(d);
-
 	i = 0;
-	while ((dir = readdir(d)) != NULL) {
-		if (dir->d_type == DT_DIR)
-			continue;
-		find_start_end_date(dir->d_name, data[i]);
+	reset_iterator(use_stocks);
+	while(file_iterator(dummy_line)) {
+		find_start_end_date(dummy_line, data[i]);
 		i++;
 	}
-	closedir(d);
 
 	// Compute overlapping date range
 	date min_date = data[0].start;
@@ -161,20 +203,15 @@ void loader::load_all_series(std::vector<data_series> &data)
 	printf("\n");
 
 	// Read all the data for the range we want
-	d = opendir(data_dir);
-	assert(d);
-
 	i = 0;
-	while ((dir = readdir(d)) != NULL) {
-		if (dir->d_type == DT_DIR)
-			continue;
-		printf("[%3d] loading %5s ( ", i, data[i].name);
+	reset_iterator(use_stocks);
+	while(file_iterator(dummy_line)) {
+		printf("[%3d] loading %5s ( ", i, dummy_line);
 		data[i].start.print();
 		data[i].end.print();
 		printf(") ... ");
-		load_csv(dir->d_name, min_date, max_date, data[i]);
+		load_csv(dummy_line, min_date, max_date, data[i]);
 		printf("got %d records\n", data[i].size);
 		i++;
 	}
-	closedir(d);
 }
