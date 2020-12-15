@@ -42,7 +42,7 @@ __global__ void run_simulation(int seed, const int num_rounds, int num_stocks, i
 			position = start_day + curand(&state) % (days_back - 1);
 			steps = 0;
 		} else {
-			position ++;
+			position++;
 			steps++;
 		}
 
@@ -95,10 +95,18 @@ void monte_carlo::run_with_data(portfolio &p, std::vector<float> &expectancy_lis
 		portfolio p2;
 
 		for(int round = 0; round < num_rounds; round++) {
-	 		p2 = p;
+			p2 = p;
 
+			int position, steps;
+			steps = 0;
 			for(int i = 0; i < duration; i++) {
-				int position = start_day + rand() % (days_back - 1);
+				if ((steps % 30) == 0) {
+					position = start_day + rand() % (days_back - 1);
+					steps = 0;
+				} else {
+					position++;
+					steps++;
+				}
 	
 				for(unsigned stock = 0; stock < historical_data_.size(); stock++) {
 					float factor = (historical_data_[stock].values[position + 1] / historical_data_[stock].values[position]);
