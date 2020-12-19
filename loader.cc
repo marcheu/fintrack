@@ -83,8 +83,7 @@ void loader::load_csv (char *file_name, date start, date end, data_series & data
 
 	int count = 0;
 	date d;
-	float open_price, high, low, close, adj_close;
-	int volume;
+	float open_price, high, low, close_price, volume, adj_close;
 	while (fgets (dummy_line, sizeof (dummy_line), f)) {
 		int r = sscanf (dummy_line, "%d-%d-%d", &d.year, &d.month, &d.day);
 		assert (r == 3);
@@ -103,10 +102,10 @@ void loader::load_csv (char *file_name, date start, date end, data_series & data
 
 	int i = 0;
 	while (fgets (dummy_line, sizeof (dummy_line), f)) {
-		int r = sscanf (dummy_line, "%d-%d-%d,%f,%f,%f,%f,%f,%d\n", &d.year, &d.month, &d.day, &low, &open_price, &close, &volume, &adj_close);
+		int r = sscanf (dummy_line, "%d-%d-%d,%f,%f,%f,%f,%f,%f\n", &d.year, &d.month, &d.day, &high, &low, &open_price, &close_price, &volume, &adj_close);
 		if ((d >= start) && (d <= end)) {
 			assert (r == 9);
-			data.values[i] = close;
+			data.values[i] = close_price;
 			i++;
 		}
 
