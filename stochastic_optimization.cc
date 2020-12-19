@@ -50,24 +50,26 @@ static void one (portfolio & p, int size)
 		p.proportions[i] = 1.f;
 }
 
-static float fitness_function (float expectancy, float standard_deviation)
+static float fitness_function (float expectancy, float standard_deviation, float downside_deviation)
 {
 	float factor1 = 0.f;
 	float factor2 = 0.f;
 	float factor3 = 0.f;
 
-	if (expectancy < 1.5f)
-		factor1 = (1.5f - expectancy) * 6.0f;
+	if (expectancy < 1.65f)
+		factor1 = (1.65f - expectancy) * 6.0f;
 	else
 		factor1 = expectancy * -0.1f;
 
 /*	if (standard_deviation > 0.35f)
 		factor2 = standard_deviation - 0.35f;
 	else */
-	factor2 = 1.2f * standard_deviation;
+/*	factor2 = 1.2f * standard_deviation;
 
 	if (standard_deviation - (expectancy - 1.0f) > 0.03f)
-		factor3 = (standard_deviation - (expectancy - 1.0f) - 0.03f) * 3.f;
+		factor3 = (standard_deviation - (expectancy - 1.0f) - 0.03f) * 3.f;*/
+	
+	factor2 = downside_deviation * 6.f;
 
 	return -factor1 - factor2 - factor3;
 /*
@@ -83,15 +85,15 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 	int iteration = 0;
 	int size = historical_data.size ();
 	float fitness = -FLT_MAX;
-	float expectancy, standard_deviation;
+	float expectancy, standard_deviation, downside_deviation;
 	int num_rounds = 16384;
 	int stagnate = 0;
 
 	monte_carlo m (historical_data, true);
 
 	p.print (historical_data);
-	m.run (p, expectancy, standard_deviation, num_rounds);
-	fitness = fitness_function (expectancy, standard_deviation);
+	m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds);
+	fitness = fitness_function (expectancy, standard_deviation, downside_deviation);
 
 
 	if (!refine) {
@@ -101,8 +103,8 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 		p.normalize ();
 
 		// Coarse pass
-		m.run (p, expectancy, standard_deviation, num_rounds);
-		fitness = fitness_function (expectancy, standard_deviation);
+		m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds);
+		fitness = fitness_function (expectancy, standard_deviation, downside_deviation);
 
 		float factor = 0.5f;
 		while (stagnate < 10000) {
@@ -114,8 +116,8 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 			p_new.normalize ();
 			p_new.max_proportions (historical_data);
 
-			m.run (p_new, expectancy, standard_deviation, num_rounds);
-			float new_fitness = fitness_function (expectancy, standard_deviation);
+			m.run (p_new, expectancy, standard_deviation, downside_deviation, num_rounds);
+			float new_fitness = fitness_function (expectancy, standard_deviation, downside_deviation);
 			if (new_fitness > fitness) {
 				p = p_new;
 				fitness = new_fitness;
@@ -127,7 +129,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 			iteration++;
 
 			stagnate++;
-			if ((stagnate == 10000) && factor > 0.001f) {
+			if ((stagnate == 2000) && factor > 0.01f) {
 				factor /= 1.2f;
 				stagnate = 0;
 				printf ("new factor %f\n", factor);
@@ -148,13 +150,13 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 		p_new.normalize ();
 		p_new.max_proportions (historical_data);
 
-		m.run (p_new, expectancy, standard_deviation, num_rounds);
-		float new_fitness = fitness_function (expectancy, standard_deviation);
+		m.run (p_new, expectancy, standard_deviation, downside_deviation, num_rounds);
+		float new_fitness = fitness_function (expectancy, standard_deviation, downside_deviation);
 		if (new_fitness > fitness) {
 			stagnate = 0;
 			p = p_new;
 			fitness = new_fitness;
-			printf ("fitness now %f e = %f σ = %f \n", fitness, expectancy, standard_deviation);
+			printf ("fitness now %f e = %f σ = %f σd = %f \n", fitness, expectancy, standard_deviation, downside_deviation);
 			p.print (historical_data);
 			goto do_it_again2;
 		}
@@ -166,14 +168,14 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 			num_rounds *= 4;
 			stagnate = 0;
 			printf ("rounds %d\n", num_rounds);
-			m.run (p, expectancy, standard_deviation, num_rounds);
-			fitness = fitness_function (expectancy, standard_deviation);
+			m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds);
+			fitness = fitness_function (expectancy, standard_deviation, downside_deviation);
 		}
 	}
 
 	p.print (historical_data);
 	for (int l = 0; l < 10; l++) {
-		m.run (p, expectancy, standard_deviation, num_rounds);
-		printf ("e = %f σ = %f \n", expectancy, standard_deviation);
+		m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds);
+		printf ("e = %f σ = %f σd = %f \n", expectancy, standard_deviation, downside_deviation);
 	}
 }

@@ -197,14 +197,14 @@ int main (int argc, char *argv[])
 		FILE *f = fopen (frontier_filename, "a");
 		portfolio single;
 		int num_rounds = 16384;
-		float expectancy, standard_deviation;
+		float expectancy, standard_deviation, downside_deviation;
 		monte_carlo m (data, true);
 
 		for (int i = 0; i < 100000; i++) {
 			single.randomize (data);
 			single.normalize ();
-			m.run (single, expectancy, standard_deviation, num_rounds);
-			fprintf (f, "%f, %f\n", expectancy, standard_deviation);
+			m.run (single, expectancy, standard_deviation, downside_deviation, num_rounds);
+			fprintf (f, "%f, %f, %f\n", expectancy, standard_deviation, downside_deviation);
 			printf ("%d/100000\n", i);
 		}
 		fclose (f);
@@ -216,7 +216,7 @@ int main (int argc, char *argv[])
 		stochastic_optimization (data, p, true);
 
 	if (need_evaluate) {
-		float expectancy, standard_deviation;
+		float expectancy, standard_deviation, downside_deviation;
 		monte_carlo m (data, true);
 
 		int num_rounds = 32768 * 16;
@@ -227,8 +227,8 @@ int main (int argc, char *argv[])
 					if (j != i)
 						single.proportions[j] = 0.f;
 				single.normalize ();
-				m.run (single, expectancy, standard_deviation, num_rounds);
-				printf ("  %5s e = %f σ = %f \n", data[i].name, expectancy, standard_deviation);
+				m.run (single, expectancy, standard_deviation, downside_deviation, num_rounds);
+				printf ("  %5s e = %f σ = %f σd = %f \n", data[i].name, expectancy, standard_deviation, downside_deviation);
 			}
 		}
 		print_correlation_matrix (data);
@@ -238,8 +238,8 @@ int main (int argc, char *argv[])
 		std::vector < float >values;
 		for (int i = 0; i < 4; i++) {
 			int y = ((int[]) { 1, 2, 4, 10 })[i];
-			m.run_with_data (p, values, expectancy, standard_deviation, num_rounds, y * 253);
-			printf ("%02d years: e = %f σ = %f\n", y, expectancy, standard_deviation);
+			m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y * 253);
+			printf ("%02d years: e = %f σ = %f σd = %f \n", y, expectancy, standard_deviation, downside_deviation);
 			print_histogram (values);
 			values.clear ();
 		}

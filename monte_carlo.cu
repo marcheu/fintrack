@@ -59,7 +59,7 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 	expectancy_list[round] = expectancy * expectancy;
 }
 
-void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, int num_rounds, int days_back)
+void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back)
 {
 	int num_days = historical_data_[0].size;
 	days_back = min (num_days, days_back);
@@ -89,6 +89,13 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		for (int i = 0; i < num_rounds; i++)
 			standard_deviation += (gpu_expectancy_list[i] - expectancy) * (gpu_expectancy_list[i] - expectancy);
 		standard_deviation = sqrtf (standard_deviation / (float) num_rounds);
+
+		// calculate downside deviation
+		downside_deviation = 0.f;
+		for (int i = 0; i < num_rounds; i++)
+			if (gpu_expectancy_list[i] < expectancy)
+				downside_deviation += (gpu_expectancy_list[i] - expectancy) * (gpu_expectancy_list[i] - expectancy);
+		downside_deviation = sqrtf (downside_deviation / (float) num_rounds);
 		cudaFree (gpu_expectancy_list);
 	}
 	else {
@@ -133,11 +140,18 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		for (unsigned i = 0; i < expectancy_list.size (); i++)
 			standard_deviation += (expectancy_list[i] - expectancy) * (expectancy_list[i] - expectancy);
 		standard_deviation = sqrtf (standard_deviation / (float) expectancy_list.size ());
+
+		// calculate downside deviation
+		downside_deviation = 0.f;
+		for (unsigned i = 0; i < expectancy_list.size (); i++)
+			if (expectancy_list[i] < expectancy)
+				downside_deviation += (expectancy_list[i] - expectancy) * (expectancy_list[i] - expectancy);
+		downside_deviation = sqrtf (standard_deviation / (float) expectancy_list.size ());
 	}
 }
 
-void monte_carlo::run (portfolio & p, float &expectancy, float &standard_deviation, int num_rounds, int days_back)
+void monte_carlo::run (portfolio & p, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back)
 {
 	std::vector < float >dummy_list;
-	run_with_data (p, dummy_list, expectancy, standard_deviation, num_rounds, days_back);
+	run_with_data (p, dummy_list, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
 }
