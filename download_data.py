@@ -5,6 +5,8 @@ import os
 
 etf_list = [
 'AGQ',
+'ARKK',
+'ARKW',
 'BIB',
 'BIV',
 'BND',
@@ -41,6 +43,7 @@ etf_list = [
 'UDOW',
 'UGE',
 'UGL',
+'UJB',
 'ULE',
 'UMDD',
 'UPRO',
