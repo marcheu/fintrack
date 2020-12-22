@@ -75,17 +75,25 @@ void print_histogram (std::vector < float >values)
 		else
 			printf (COLOR_GREEN);
 		int printed_char = 0;
-		while (value > 0.f) {
-			print_char (value);
-			value -= 1.f;
+		while ((value > 0.f) && (printed_char < 120)) {
 			printed_char++;
+			if (printed_char == 117) {
+				printf("▶");
+			} else if (printed_char == 118) {
+				printf(COLOR_INVERT);
+				printf("▶");
+				printf(COLOR_UNINVERT);
+			} else {
+				print_char (value);
+				value -= 1.f;
+			}
 		}
 
 		while (printed_char < 120) {
 			printed_char++;
 			printf (" ");
 		}
-		printf ("| %.0f%% e=%f", 100.f * counted / total, (float) b / (float) num_buckets * (max_value - min_value) + min_value);
+		printf ("│ %.0f%% e=%f", 100.f * counted / total, (float) b / (float) num_buckets * (max_value - min_value) + min_value);
 		printf ("\n");
 	}
 	printf (COLOR_NORMAL);
@@ -191,9 +199,9 @@ int main (int argc, char *argv[])
 	}
 
 	if (need_learn)
-		stochastic_optimization (data, p, false);
+		stochastic_optimization (data, p, false, 253 * 2);
 	if (need_optimize)
-		stochastic_optimization (data, p, true);
+		stochastic_optimization (data, p, true, 253 * 2);
 
 	if (need_evaluate) {
 		float expectancy, standard_deviation, downside_deviation;

@@ -10,6 +10,8 @@
 #define COLOR_MAGENTA  "\x1B[35m"
 #define COLOR_CYAN  "\x1B[36m"
 #define COLOR_WHITE  "\x1B[37m"
+#define COLOR_INVERT "\x1B[7m"
+#define COLOR_UNINVERT "\x1B[27m"
 
 
 #endif

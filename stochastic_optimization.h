@@ -4,6 +4,6 @@
 #include "data_series.h"
 #include "portfolio.h"
 
-void stochastic_optimization (std::vector < data_series > &historical_data, portfolio & p, bool refine);
+void stochastic_optimization (std::vector < data_series > &historical_data, portfolio & p, bool refine, int days_back);
 
 #endif
