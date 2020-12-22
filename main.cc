@@ -149,7 +149,7 @@ int main (int argc, char *argv[])
 	srand (time (NULL));
 	char *read_filename = NULL, *write_filename = NULL, *frontier_filename = NULL;
 
-	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_frontier = false;
+	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_frontier = false, need_test = false;;
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp (argv[i], "-o"))
@@ -173,14 +173,16 @@ int main (int argc, char *argv[])
 			i++;
 			frontier_filename = argv[i];
 		}
+		else if (!strcmp (argv[i], "-t"))
+			need_test = true;
 	}
 
 	std::vector < data_series > data;
 	loader l;
 	if (need_evaluate)
-		l.load_all_series (data, true);
+		l.load_all_series (data, true, need_test);
 	else
-		l.load_all_series (data, false);
+		l.load_all_series (data, false, need_test);
 
 	portfolio p;
 	if (need_read) {
@@ -237,7 +239,7 @@ int main (int argc, char *argv[])
 
 		std::vector < float >values;
 		for (int i = 0; i < 5; i++) {
-			int y = ((int[]) { 253/2, 1 * 253, 2 * 253, 4 * 253, 10 * 253 })[i];
+			int y = ((int[]) { 253 / 2, 1 * 253, 2 * 253, 4 * 253, 10 * 253 })[i];
 			m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y);
 			printf ("%02f years: e = %f σ = %f σd = %f \n", y / 253.f, expectancy, standard_deviation, downside_deviation);
 			print_histogram (values);
