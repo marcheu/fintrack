@@ -147,9 +147,9 @@ void print_correlation_matrix (std::vector < data_series > &data)
 int main (int argc, char *argv[])
 {
 	srand (time (NULL));
-	char *read_filename = NULL, *write_filename = NULL, *frontier_filename = NULL;
+	char *read_filename = NULL, *write_filename = NULL;
 
-	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_frontier = false, need_test = false;;
+	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_test = false;;
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp (argv[i], "-o"))
@@ -168,11 +168,6 @@ int main (int argc, char *argv[])
 		}
 		else if (!strcmp (argv[i], "-e"))
 			need_evaluate = true;
-		else if (!strcmp (argv[i], "-f")) {
-			need_frontier = true;
-			i++;
-			frontier_filename = argv[i];
-		}
 		else if (!strcmp (argv[i], "-t"))
 			need_test = true;
 	}
@@ -193,23 +188,6 @@ int main (int argc, char *argv[])
 	else {
 		p.randomize (data);
 		p.normalize ();
-	}
-
-	if (need_frontier) {
-		FILE *f = fopen (frontier_filename, "a");
-		portfolio single;
-		int num_rounds = 16384;
-		float expectancy, standard_deviation, downside_deviation;
-		monte_carlo m (data, true);
-
-		for (int i = 0; i < 100000; i++) {
-			single.randomize (data);
-			single.normalize ();
-			m.run (single, expectancy, standard_deviation, downside_deviation, num_rounds);
-			fprintf (f, "%f, %f, %f\n", expectancy, standard_deviation, downside_deviation);
-			printf ("%d/100000\n", i);
-		}
-		fclose (f);
 	}
 
 	if (need_learn)
