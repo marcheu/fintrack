@@ -5,8 +5,6 @@ import os
 
 etf_list = [
 'AGQ',
-'ARKK',
-'ARKW',
 'BIB',
 'BIV',
 'BND',
