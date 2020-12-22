@@ -156,6 +156,7 @@ int main (int argc, char *argv[])
 {
 	srand (time (NULL));
 	char *read_filename = NULL, *write_filename = NULL;
+	float goal = 1.6f; // default 60% target gain per year
 
 	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_test = false;;
 
@@ -178,6 +179,10 @@ int main (int argc, char *argv[])
 			need_evaluate = true;
 		else if (!strcmp (argv[i], "-t"))
 			need_test = true;
+		else if (!strcmp (argv[i], "-g")) {
+			i++;
+			goal = strtof(argv[i], NULL);
+		}
 	}
 
 	std::vector < data_series > data;
@@ -199,9 +204,9 @@ int main (int argc, char *argv[])
 	}
 
 	if (need_learn)
-		stochastic_optimization (data, p, false, 253 * 2);
+		stochastic_optimization (data, p, false, 253 * 2, goal);
 	if (need_optimize)
-		stochastic_optimization (data, p, true, 253 * 2);
+		stochastic_optimization (data, p, true, 253 * 2, goal);
 
 	if (need_evaluate) {
 		float expectancy, standard_deviation, downside_deviation;
