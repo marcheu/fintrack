@@ -76,26 +76,9 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 
 		cudaDeviceSynchronize ();
 
-		// calculate expectancy
-		expectancy = 0.f;
-		for (int i = 0; i < num_rounds; i++) {
-			expectancy += gpu_expectancy_list[i];
+		for (int i = 0; i < num_rounds; i++)
 			expectancy_list.push_back (gpu_expectancy_list[i]);
-		}
-		expectancy /= (float) num_rounds;
 
-		// calculate standard deviation
-		standard_deviation = 0.f;
-		for (int i = 0; i < num_rounds; i++)
-			standard_deviation += (gpu_expectancy_list[i] - expectancy) * (gpu_expectancy_list[i] - expectancy);
-		standard_deviation = sqrtf (standard_deviation / (float) num_rounds);
-
-		// calculate downside deviation
-		downside_deviation = 0.f;
-		for (int i = 0; i < num_rounds; i++)
-			if (gpu_expectancy_list[i] < expectancy)
-				downside_deviation += (gpu_expectancy_list[i] - expectancy) * (gpu_expectancy_list[i] - expectancy);
-		downside_deviation = sqrtf (downside_deviation / (float) num_rounds);
 		cudaFree (gpu_expectancy_list);
 	}
 	else {
@@ -128,26 +111,30 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 				round_expectancy += p2.proportions[stock];
 			expectancy_list.push_back (round_expectancy);
 		}
-
-		// calculate expectancy
-		expectancy = 0.f;
-		for (unsigned i = 0; i < expectancy_list.size (); i++)
-			expectancy += expectancy_list[i];
-		expectancy /= (float) expectancy_list.size ();
-
-		// calculate standard deviation
-		standard_deviation = 0.f;
-		for (unsigned i = 0; i < expectancy_list.size (); i++)
-			standard_deviation += (expectancy_list[i] - expectancy) * (expectancy_list[i] - expectancy);
-		standard_deviation = sqrtf (standard_deviation / (float) expectancy_list.size ());
-
-		// calculate downside deviation
-		downside_deviation = 0.f;
-		for (unsigned i = 0; i < expectancy_list.size (); i++)
-			if (expectancy_list[i] < expectancy)
-				downside_deviation += (expectancy_list[i] - expectancy) * (expectancy_list[i] - expectancy);
-		downside_deviation = sqrtf (standard_deviation / (float) expectancy_list.size ());
 	}
+
+	// calculate expectancy
+	double expectancy_d = 0.f;
+	for (int i = 0; i < num_rounds; i++) {
+		expectancy_d += expectancy_list[i];
+	}
+	expectancy_d /= (double) num_rounds;
+	expectancy = expectancy_d;
+
+	// calculate standard deviation
+	double standard_deviation_d = 0.f;
+	for (int i = 0; i < num_rounds; i++)
+		standard_deviation_d += (expectancy_list[i] - expectancy_d) * (expectancy_list[i] - expectancy_d);
+	standard_deviation_d = sqrt (standard_deviation_d / (double) num_rounds);
+	standard_deviation = standard_deviation_d;
+
+	// calculate downside deviation
+	double downside_deviation_d = 0.f;
+	for (int i = 0; i < num_rounds; i++)
+		if (expectancy_list[i] < expectancy)
+			downside_deviation_d += (expectancy_list[i] - expectancy_d) * (expectancy_list[i] - expectancy_d);
+	downside_deviation_d = sqrt (downside_deviation_d / (double) num_rounds);
+	downside_deviation = downside_deviation_d;
 }
 
 void monte_carlo::run (portfolio & p, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back)
