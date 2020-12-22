@@ -236,10 +236,10 @@ int main (int argc, char *argv[])
 		num_rounds = 32768 * 128;
 
 		std::vector < float >values;
-		for (int i = 0; i < 4; i++) {
-			int y = ((int[]) { 1, 2, 4, 10 })[i];
-			m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y * 253);
-			printf ("%02d years: e = %f σ = %f σd = %f \n", y, expectancy, standard_deviation, downside_deviation);
+		for (int i = 0; i < 5; i++) {
+			int y = ((int[]) { 253/2, 1 * 253, 2 * 253, 4 * 253, 10 * 253 })[i];
+			m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y);
+			printf ("%02f years: e = %f σ = %f σd = %f \n", y / 253.f, expectancy, standard_deviation, downside_deviation);
 			print_histogram (values);
 			values.clear ();
 		}
