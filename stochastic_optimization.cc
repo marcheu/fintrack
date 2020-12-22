@@ -56,8 +56,8 @@ static float fitness_function (float expectancy, float standard_deviation, float
 	float factor2 = 0.f;
 	float factor3 = 0.f;
 
-	if (expectancy < 1.65f)
-		factor1 = (1.65f - expectancy) * 6.0f;
+	if (expectancy < 1.68f)
+		factor1 = (1.68f - expectancy) * 6.0f;
 	else
 		factor1 = expectancy * -0.1f;
 
@@ -68,8 +68,8 @@ static float fitness_function (float expectancy, float standard_deviation, float
 
 	if (standard_deviation - (expectancy - 1.0f) > 0.03f)
 		factor3 = (standard_deviation - (expectancy - 1.0f) - 0.03f) * 3.f;*/
-	
-	factor2 = downside_deviation * 6.f;
+
+	factor2 = downside_deviation * 8.f;
 
 	return -factor1 - factor2 - factor3;
 /*
