@@ -65,7 +65,7 @@ void portfolio::max_proportions (std::vector < data_series > historical_data)
 
 
 
-	const float limit = 0.32f;
+	const float limit = 0.33f;
 
 	float over = 0.f;
 
@@ -110,4 +110,11 @@ void portfolio::print (std::vector < data_series > historical_data)
 		printf ("|");
 	}
 	printf ("\n");
+}
+
+void portfolio::print_as_file (std::vector < data_series > historical_data)
+{
+	for (int i = 0; i < size_; i++)
+		if (proportions[i] >= 0.001)
+			printf ("%s %f\n", historical_data[i].name, proportions[i]);
 }

@@ -204,9 +204,9 @@ int main (int argc, char *argv[])
 	}
 
 	if (need_learn)
-		stochastic_optimization (data, p, false, 253 * 2, goal);
+		stochastic_optimization (data, p, false, 253 * 10, goal);
 	if (need_optimize)
-		stochastic_optimization (data, p, true, 253 * 2, goal);
+		stochastic_optimization (data, p, true, 253 * 10, goal);
 
 	if (need_evaluate) {
 		float expectancy, standard_deviation, downside_deviation;

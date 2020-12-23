@@ -17,6 +17,7 @@ class portfolio {
 	void normalize ();
 	void max_proportions (std::vector < data_series > historical_data);
 	void print (std::vector < data_series > historical_data);
+	void print_as_file (std::vector < data_series > historical_data);
 };
 
 #endif

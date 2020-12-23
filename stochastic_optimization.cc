@@ -128,7 +128,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 	// Fine pass
 	stagnate = 0;
-	while (stagnate < 20000) {
+	while (stagnate < 5000) {
 		make_delta (delta, size);
 
 	      do_it_again2:
@@ -160,7 +160,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 		}
 	}
 
-	p.print (historical_data);
+	p.print_as_file (historical_data);
 	for (int l = 0; l < 10; l++) {
 		m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
 		printf ("e = %f σ = %f σd = %f \n", expectancy, standard_deviation, downside_deviation);
