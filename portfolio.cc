@@ -65,7 +65,7 @@ void portfolio::max_proportions (std::vector < data_series > historical_data)
 
 
 
-	const float limit = 0.33f;
+	const float limit = 0.5f;
 
 	float over = 0.f;
 

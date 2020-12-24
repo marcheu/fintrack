@@ -7,6 +7,7 @@
 const char *data_dir_etf = "financial_data/etf/";
 const char *data_dir_stock = "financial_data/stock/";
 const char *data_dir_test = "financial_data/test/";
+const char *data_file_sectors = "financial_data/sectors/sectors.csv";
 
 class file_iterator {
       public:
@@ -218,6 +219,58 @@ void loader::find_start_end_date (char *file_name, data_series & data)
 	data.name[strlen (data.name) - 4] = 0;
 }
 
+static int index_of (std::vector < data_series > &data, const char *name)
+{
+	for (unsigned i = 0; i < data.size (); i++)
+		if (!strcmp (data[i].name, name))
+			return i;
+
+	printf ("Couldn't find %s\n", name);
+	return -1;
+}
+
+void loader::load_sectors (std::vector < data_series > &data)
+{
+	FILE *f = fopen (data_file_sectors, "rb");
+	assert (f);
+
+	char dummy_line[1024];
+
+	// Read the header and throw it away
+	assert (fgets (dummy_line, sizeof (dummy_line), f));
+
+	int i = 0;
+	while (fgets (dummy_line, sizeof (dummy_line), f)) {
+		float values[NUM_SECTORS], leverage;
+		char *data_line = &dummy_line[0];
+		while (data_line[0] != ',')
+			data_line++;
+		data_line[0] = 0;
+		data_line++;
+		int r = sscanf (data_line, "%f,	%f,	%f,	%f,	%f,	%f,	%f,	%f,	%f,	%f,	%f,	%f,	%f,	%f\n",
+				&values[0],
+				&values[1],
+				&values[2],
+				&values[3],
+				&values[4],
+				&values[5],
+				&values[6],
+				&values[7],
+				&values[8],
+				&values[9],
+				&values[10],
+				&values[11],
+				&values[12],
+				&leverage);
+		assert (r == 14);
+		i = index_of (data, dummy_line);
+		if (i == -1)
+			continue;
+		memcpy (data[i].sector_proportions, values, sizeof (float) * NUM_SECTORS);
+		data[i].leverage = leverage;
+	}
+}
+
 void loader::load_all_series (std::vector < data_series > &data, bool use_stocks, bool use_test)
 {
 	file_iterator *it;
@@ -273,6 +326,9 @@ void loader::load_all_series (std::vector < data_series > &data, bool use_stocks
 		printf ("got %d records\n", data[i].size);
 		i++;
 	}
+
+	// read the sectors
+	load_sectors (data);
 
 	delete it;
 }

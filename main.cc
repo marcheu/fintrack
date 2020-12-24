@@ -78,12 +78,14 @@ void print_histogram (std::vector < float >values)
 		while ((value > 0.f) && (printed_char < 120)) {
 			printed_char++;
 			if (printed_char == 117) {
-				printf("▶");
-			} else if (printed_char == 118) {
-				printf(COLOR_INVERT);
-				printf("▶");
-				printf(COLOR_UNINVERT);
-			} else {
+				printf ("▶");
+			}
+			else if (printed_char == 118) {
+				printf (COLOR_INVERT);
+				printf ("▶");
+				printf (COLOR_UNINVERT);
+			}
+			else {
 				print_char (value);
 				value -= 1.f;
 			}
@@ -152,11 +154,65 @@ void print_correlation_matrix (std::vector < data_series > &data)
 	printf ("=============================================\n");
 }
 
+void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
+{
+	float expectancy, standard_deviation, downside_deviation;
+	monte_carlo m (data, true);
+
+	// evaluate each component
+	int num_rounds = 32768 * 16;
+	for (unsigned i = 0; i < data.size (); i++) {
+		if (p.proportions[i] > 0.0f) {
+			portfolio single = p;
+			for (unsigned j = 0; j < data.size (); j++)
+				if (j != i)
+					single.proportions[j] = 0.f;
+			single.normalize ();
+			m.run (single, expectancy, standard_deviation, downside_deviation, num_rounds);
+			printf ("  %5s e = %f σ = %f σd = %f \n", data[i].name, expectancy, standard_deviation, downside_deviation);
+		}
+	}
+
+	// print correlation matrix
+	print_correlation_matrix (data);
+
+	num_rounds = 32768 * 128;
+
+	// evaluate at 0.5 1 2 4 10 years
+	std::vector < float >values;
+	for (int i = 0; i < 5; i++) {
+		int y = ((int[]) { 253 / 2, 1 * 253, 2 * 253, 4 * 253, 10 * 253 })[i];
+		m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y);
+		printf ("%02f years: e = %f σ = %f σd = %f \n", y / 253.f, expectancy, standard_deviation, downside_deviation);
+		print_histogram (values);
+		values.clear ();
+	}
+
+	// evaluate sectors
+	float sectors[NUM_SECTORS];
+	for (unsigned s = 0; s < NUM_SECTORS; s++)
+		sectors[s] = 0.f;
+
+	for (unsigned t = 0; t < data.size (); t++) {
+		for (unsigned s = 0; s < NUM_SECTORS; s++) {
+			sectors[s] += p.proportions[t] * data[t].leverage * data[t].sector_proportions[s];
+		}
+	}
+
+	float sum = 0.f;
+	for (unsigned s = 0; s < NUM_SECTORS; s++) {
+		sum += sectors[s];
+		printf ("%s: %f\n", sector_name[s], sectors[s]);
+	}
+	printf ("Total %f\n", sum);
+}
+
+
 int main (int argc, char *argv[])
 {
 	srand (time (NULL));
 	char *read_filename = NULL, *write_filename = NULL;
-	float goal = 1.6f; // default 60% target gain per year
+	float goal = 1.65f;	// default 65% target gain per year
 
 	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_test = false;;
 
@@ -181,7 +237,7 @@ int main (int argc, char *argv[])
 			need_test = true;
 		else if (!strcmp (argv[i], "-g")) {
 			i++;
-			goal = strtof(argv[i], NULL);
+			goal = strtof (argv[i], NULL);
 		}
 	}
 
@@ -209,34 +265,7 @@ int main (int argc, char *argv[])
 		stochastic_optimization (data, p, true, 253 * 10, goal);
 
 	if (need_evaluate) {
-		float expectancy, standard_deviation, downside_deviation;
-		monte_carlo m (data, true);
-
-		int num_rounds = 32768 * 16;
-		for (unsigned i = 0; i < data.size (); i++) {
-			if (p.proportions[i] > 0.0f) {
-				portfolio single = p;
-				for (unsigned j = 0; j < data.size (); j++)
-					if (j != i)
-						single.proportions[j] = 0.f;
-				single.normalize ();
-				m.run (single, expectancy, standard_deviation, downside_deviation, num_rounds);
-				printf ("  %5s e = %f σ = %f σd = %f \n", data[i].name, expectancy, standard_deviation, downside_deviation);
-			}
-		}
-		print_correlation_matrix (data);
-
-		num_rounds = 32768 * 128;
-
-		std::vector < float >values;
-		for (int i = 0; i < 5; i++) {
-			int y = ((int[]) { 253 / 2, 1 * 253, 2 * 253, 4 * 253, 10 * 253 })[i];
-			m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y);
-			printf ("%02f years: e = %f σ = %f σd = %f \n", y / 253.f, expectancy, standard_deviation, downside_deviation);
-			print_histogram (values);
-			values.clear ();
-		}
-
+		evaluate_portfolio (data, p);
 	}
 
 	if (need_write) {

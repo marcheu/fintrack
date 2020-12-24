@@ -13,6 +13,7 @@ class loader {
 	int number_of_csv (file_iterator * it, bool use_stocks);
 	void load_csv (char *file_name, date start, date end, data_series & data);
 	void find_start_end_date (char *filename, data_series & data);
+	void load_sectors (std::vector < data_series > &data);
 };
 
 #endif
