@@ -63,22 +63,24 @@ static float fitness_function (std::vector < data_series > &data, portfolio & p,
 		factor1 = expectancy * -0.1f;
 
 	// 2. Minimize downside deviation
-	factor2 = downside_deviation * 4.f;
+	factor2 = downside_deviation * 6.f;
 
 	// 3. Try to get some diversification
-	float sectors[NUM_SECTORS];
+	float sectors[NUM_SECTORS], total = 0.f;
 	for (unsigned s = 0; s < NUM_SECTORS; s++)
 		sectors[s] = 0.f;
 
 	for (unsigned t = 0; t < data.size (); t++) {
 		for (unsigned s = 0; s < NUM_SECTORS; s++) {
-			sectors[s] += p.proportions[t] * data[t].leverage * data[t].sector_proportions[s];
+			float v = p.proportions[t] * data[t].leverage * data[t].sector_proportions[s];
+			sectors[s] += v;
+			total += v;
 		}
 	}
 	for (unsigned s = 0; s < NUM_SECTORS; s++)
-		if (sectors[s] > 120.f)
-			factor3 += (sectors[s] - 120.f);
-	factor3 /= 100.f;
+		if (sectors[s] > 100.f)
+			factor3 += (sectors[s] - 100.f);
+	factor3 /= 50.f;
 
 	return -factor1 - factor2 - factor3;
 }
@@ -112,7 +114,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 		fitness = fitness_function (historical_data, p, expectancy, standard_deviation, downside_deviation, goal);
 
 		float factor = 0.5f;
-		while (stagnate < 10000) {
+		while (stagnate < 2000) {
 			make_single_delta (delta, iteration % size, size, factor);
 
 		      do_it_again:
@@ -134,7 +136,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 			iteration++;
 
 			stagnate++;
-			if ((stagnate == 2000) && factor > 0.01f) {
+			if ((stagnate == 2000) && factor > 0.1f) {
 				factor /= 1.5f;
 				stagnate = 0;
 				printf ("new factor %f\n", factor);
