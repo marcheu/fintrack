@@ -5,28 +5,6 @@
 #include "stochastic_optimization.h"
 #include "util.h"
 
-void print_char (float v)
-{
-	if (v >= 8.f / 8.f)
-		printf ("█");
-	else if (v >= 7.f / 8.f)
-		printf ("▉");
-	else if (v >= 6.f / 8.f)
-		printf ("▊");
-	else if (v >= 5.f / 8.f)
-		printf ("▋");
-	else if (v >= 4.f / 8.f)
-		printf ("▌");
-	else if (v >= 3.f / 8.f)
-		printf ("▍");
-	else if (v >= 2.f / 8.f)
-		printf ("▎");
-	else if (v >= 1.f / 8.f)
-		printf ("▏");
-	else
-		printf (" ");
-}
-
 void print_histogram (std::vector < float >values)
 {
 	const int num_buckets = 50;
@@ -74,27 +52,9 @@ void print_histogram (std::vector < float >values)
 			printf (COLOR_YELLOW);
 		else
 			printf (COLOR_GREEN);
-		int printed_char = 0;
-		while ((value > 0.f) && (printed_char < 120)) {
-			printed_char++;
-			if (printed_char == 117) {
-				printf ("▶");
-			}
-			else if (printed_char == 118) {
-				printf (COLOR_INVERT);
-				printf ("▶");
-				printf (COLOR_UNINVERT);
-			}
-			else {
-				print_char (value);
-				value -= 1.f;
-			}
-		}
 
-		while (printed_char < 120) {
-			printed_char++;
-			printf (" ");
-		}
+		print_bar (value);
+
 		printf ("│ %.0f%% e=%f", 100.f * counted / total, (float) b / (float) num_buckets * (max_value - min_value) + min_value);
 		printf ("\n");
 	}
@@ -202,7 +162,11 @@ void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
 	float sum = 0.f;
 	for (unsigned s = 0; s < NUM_SECTORS; s++) {
 		sum += sectors[s];
-		printf ("%s: %f\n", sector_name[s], sectors[s]);
+		printf ("%s: %6.2f ", sector_name[s], sectors[s]);
+		printf (COLOR_BLUE);
+		print_bar (sectors[s]);
+		printf (COLOR_NORMAL);
+		printf ("\n");
 	}
 	printf ("Total %f\n", sum);
 }

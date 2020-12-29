@@ -279,7 +279,7 @@ void loader::load_all_series (std::vector < data_series > &data, bool use_stocks
 	else
 		it = new file_iterator_real ();
 
-	it->reset(use_stocks);
+	it->reset (use_stocks);
 	int num_files = number_of_csv (it, use_stocks);
 	int i;
 	char dummy_line[1024];

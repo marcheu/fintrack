@@ -13,5 +13,6 @@
 #define COLOR_INVERT "\x1B[7m"
 #define COLOR_UNINVERT "\x1B[27m"
 
+void print_bar (float value);
 
 #endif
