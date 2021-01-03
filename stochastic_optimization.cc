@@ -148,7 +148,8 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 	// Fine pass
 	stagnate = 0;
-	while (stagnate < 5000) {
+	num_rounds = 32768;
+	while (stagnate < 10000) {
 		make_delta (delta, size);
 
 	      do_it_again2:
@@ -171,8 +172,8 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 		stagnate++;
 
-		if ((stagnate == 2000) && (num_rounds < 32768)) {
-			num_rounds *= 4;
+		if ((stagnate == 5000) && (num_rounds < 65536)) {
+			num_rounds *= 2;
 			stagnate = 0;
 			printf ("rounds %d\n", num_rounds);
 			m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
