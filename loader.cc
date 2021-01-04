@@ -1,7 +1,6 @@
 
-#include "includes.h"
-
 #include "data_series.h"
+#include "includes.h"
 #include "loader.h"
 
 const char *data_dir_etf = "financial_data/etf/";
