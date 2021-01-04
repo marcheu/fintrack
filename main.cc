@@ -44,10 +44,7 @@ int main (int argc, char *argv[])
 
 	std::vector < data_series > data;
 	loader l;
-	if (need_stocks)
-		l.load_all_series (data, true, need_test);
-	else
-		l.load_all_series (data, false, need_test);
+	l.load_all_series (data, need_stocks, need_test);
 
 	portfolio p;
 	if (need_read) {
