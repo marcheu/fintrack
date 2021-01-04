@@ -3,7 +3,7 @@ SOURCES = $(shell find . -type f -name '*.cc'; find . -type f -name '*.cu' |xarg
 HEADERS = $(shell find . -type f -name '*.h' |xargs)
 CXX = nvcc
 
-LIB = -lm -lpthread `pkg-config --libs --cflags sdl`
+LIB = -lm -lpthread
 
 INCLUDES = -I/usr/include -I.
 OPT = -O3 $(INCLUDES) --compiler-options "-Wall -ffast-math -Wsign-compare -Wpointer-arith -Wcast-qual -Wcast-align"
