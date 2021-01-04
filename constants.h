@@ -21,4 +21,8 @@
 // The maximum proportion of the portfolio allocated to a single investment
 #define PORTFOLIO_MAX_PROPORTION 0.5f
 
+// Below this proportion, we ignore an entry in the portfolio.
+// This is 0.1%
+#define PORTFOLIO_IGNORE_PROPORTION 0.001f
+
 #endif

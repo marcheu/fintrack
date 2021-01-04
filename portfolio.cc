@@ -41,9 +41,9 @@ void portfolio::write (const char *file_name, std::vector < data_series > data)
 	assert (f);
 
 	for (int i = 0; i < size_; i++)
-		if (proportions[i] >= 0.001)
+		if (proportions[i] >= PORTFOLIO_IGNORE_PROPORTION)
 			fprintf (f, "%s %f\n", data[i].name, proportions[i]);
-	fclose(f);
+	fclose (f);
 }
 
 void portfolio::randomize (std::vector < data_series > data)
@@ -99,11 +99,11 @@ void portfolio::print (std::vector < data_series > historical_data)
 {
 	printf ("|");
 	for (int i = 0; i < size_; i++)
-		if (proportions[i] >= 0.001)
+		if (proportions[i] >= PORTFOLIO_IGNORE_PROPORTION)
 			printf ("%-5s|", historical_data[i].name);
 	printf ("\n|");
 	for (int i = 0; i < size_; i++) {
-		if (proportions[i] < 0.001)
+		if (proportions[i] < PORTFOLIO_IGNORE_PROPORTION)
 			continue;
 
 		if (proportions[i] > 0.3)
@@ -123,6 +123,6 @@ void portfolio::print (std::vector < data_series > historical_data)
 void portfolio::print_as_file (std::vector < data_series > historical_data)
 {
 	for (int i = 0; i < size_; i++)
-		if (proportions[i] >= 0.001)
+		if (proportions[i] >= PORTFOLIO_IGNORE_PROPORTION)
 			printf ("%s %f\n", historical_data[i].name, proportions[i]);
 }
