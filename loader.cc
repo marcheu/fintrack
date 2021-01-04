@@ -3,19 +3,73 @@
 #include "includes.h"
 #include "loader.h"
 
+#ifdef WIN32
+const char *data_dir_etf = "financial_data\\etf\\";
+const char *data_dir_stock = "financial_data\\stock\\";
+const char *data_dir_test = "financial_data\\test\\";
+const char *data_file_sectors = "financial_data/sectors/sectors.csv";
+#else
 const char *data_dir_etf = "financial_data/etf/";
 const char *data_dir_stock = "financial_data/stock/";
 const char *data_dir_test = "financial_data/test/";
 const char *data_file_sectors = "financial_data/sectors/sectors.csv";
+#endif
 
 class file_iterator {
-      public:
-	virtual void reset (bool use_stocks) = 0;
-	virtual bool run (char *filename) = 0;
-	  virtual ~ file_iterator () {
-	};
+public:
+	virtual void reset(bool use_stocks) = 0;
+	virtual bool run(char *filename) = 0;
+	virtual ~file_iterator() {};
 };
 
+#ifdef WIN32
+class file_iterator_test : public file_iterator {
+public:
+	void reset(bool use_stocks) {
+		strcpy(szDir, data_dir_test);
+		strcat(szDir, "*");
+		memset(&ffd, 0, sizeof(ffd));
+		hFind = INVALID_HANDLE_VALUE;
+	}
+	bool run(char *filename) {
+	again:
+		if (hFind == INVALID_HANDLE_VALUE)
+			hFind = FindFirstFile(szDir, &ffd);
+		else
+		{
+			if (!FindNextFile(hFind, &ffd))
+				return false;
+		}
+
+		if (hFind == INVALID_HANDLE_VALUE)
+			return false;
+
+		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			goto again;
+
+		strcpy(filename, ffd.cFileName);
+		return true;
+	}
+protected:
+	WIN32_FIND_DATA ffd;
+	HANDLE hFind;
+	char szDir[MAX_PATH];
+};
+
+class file_iterator_real : public file_iterator_test {
+public:
+	void reset(bool use_stocks) {
+		if (use_stocks)
+			strcpy(szDir, data_dir_stock);
+		else
+			strcpy(szDir, data_dir_etf);
+		strcat(szDir, "*");
+		memset(&ffd, 0, sizeof(ffd));
+		hFind = INVALID_HANDLE_VALUE;
+	}
+};
+
+#else
 class file_iterator_test:public file_iterator {
       public:
 	void reset (bool use_stocks) {
@@ -91,6 +145,7 @@ class file_iterator_real:public file_iterator {
 	bool stock_dir;
 	DIR *d;
 };
+#endif
 
 int loader::number_of_csv (file_iterator * it, bool use_stocks)
 {
@@ -110,24 +165,25 @@ void loader::load_csv (char *file_name, date start, date end, data_series & data
 	char dummy_line[1024];
 	strcpy (file_path, data_dir_etf);
 	strcat (file_path, file_name);
-	FILE *f = fopen (file_path, "rb");
+	FILE *f = fopen (file_path, "r");
 
 	if (!f) {
 		strcpy (file_path, data_dir_stock);
 		strcat (file_path, file_name);
-		f = fopen (file_path, "rb");
+		f = fopen (file_path, "r");
 	}
 
 	if (!f) {
 		strcpy (file_path, data_dir_test);
 		strcat (file_path, file_name);
-		f = fopen (file_path, "rb");
+		f = fopen (file_path, "r");
 	}
 
 	assert (f);
 
 	// Read the header and throw it away
-	assert (fgets (dummy_line, sizeof (dummy_line), f));
+	char* s = fgets (dummy_line, sizeof (dummy_line), f);
+	assert(s != NULL);
 
 	int count = 0;
 	date d;
@@ -142,11 +198,11 @@ void loader::load_csv (char *file_name, date start, date end, data_series & data
 
 	data.values = (float *) malloc (count * sizeof (float));
 
-
 	rewind (f);
 
 	// Read the header and throw it away
-	assert (fgets (dummy_line, sizeof (dummy_line), f));
+	s = fgets(dummy_line, sizeof(dummy_line), f);
+	assert (s != NULL);
 
 	int i = 0;
 	while (fgets (dummy_line, sizeof (dummy_line), f)) {
@@ -156,7 +212,6 @@ void loader::load_csv (char *file_name, date start, date end, data_series & data
 			data.values[i] = close_price;
 			i++;
 		}
-
 	}
 
 	assert (i == count);
@@ -172,27 +227,29 @@ void loader::find_start_end_date (char *file_name, data_series & data)
 	char dummy_line[1024];
 	strcpy (file_path, data_dir_etf);
 	strcat (file_path, file_name);
-	FILE *f = fopen (file_path, "rb");
+	FILE *f = fopen (file_path, "r");
 
 	if (!f) {
 		strcpy (file_path, data_dir_stock);
 		strcat (file_path, file_name);
-		f = fopen (file_path, "rb");
+		f = fopen (file_path, "r");
 	}
 
 	if (!f) {
 		strcpy (file_path, data_dir_test);
 		strcat (file_path, file_name);
-		f = fopen (file_path, "rb");
+		f = fopen (file_path, "r");
 	}
 
 	assert (f);
 
 	// Read the header and throw it away
-	assert (fgets (dummy_line, sizeof (dummy_line), f));
+	char* s = fgets (dummy_line, sizeof (dummy_line), f);
+	assert(s != NULL);
 
 	date d;
-	assert (fgets (dummy_line, sizeof (dummy_line), f));
+	s = fgets (dummy_line, sizeof (dummy_line), f);
+	assert(s != NULL);
 	int r = sscanf (dummy_line, "%d-%d-%d", &d.year, &d.month, &d.day);
 	assert (r == 3);
 	date min_date = d;
@@ -230,13 +287,14 @@ static int index_of (std::vector < data_series > &data, const char *name)
 
 void loader::load_sectors (std::vector < data_series > &data)
 {
-	FILE *f = fopen (data_file_sectors, "rb");
+	FILE *f = fopen (data_file_sectors, "r");
 	assert (f);
 
 	char dummy_line[1024];
 
 	// Read the header and throw it away
-	assert (fgets (dummy_line, sizeof (dummy_line), f));
+	char* s = fgets (dummy_line, sizeof (dummy_line), f);
+	assert(s != NULL);
 
 	int i = 0;
 	while (fgets (dummy_line, sizeof (dummy_line), f)) {
@@ -286,10 +344,7 @@ void loader::load_all_series (std::vector < data_series > &data, bool use_stocks
 	assert (num_files >= 1);
 
 	// Create all our series
-	for (i = 0; i < num_files; i++) {
-		data_series *d = (data_series *) malloc (sizeof (data_series));
-		data.push_back (*d);
-	}
+	data.resize(num_files);
 
 	// For each series, find min/max dates
 	i = 0;

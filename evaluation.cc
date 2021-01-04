@@ -82,8 +82,9 @@ void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
 
 	// evaluate at 0.5 1 2 4 10 years
 	std::vector < float >values;
+    int intervals[] = { TRADING_DAYS_PER_YEAR / 2, 1 * TRADING_DAYS_PER_YEAR, 2 * TRADING_DAYS_PER_YEAR, 4 * TRADING_DAYS_PER_YEAR, 10 * TRADING_DAYS_PER_YEAR };
 	for (int i = 0; i < 5; i++) {
-		int y = ((int[]) { TRADING_DAYS_PER_YEAR / 2, 1 * TRADING_DAYS_PER_YEAR, 2 * TRADING_DAYS_PER_YEAR, 4 * TRADING_DAYS_PER_YEAR, 10 * TRADING_DAYS_PER_YEAR })[i];
+		int y = intervals[i];
 		m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y);
 		printf ("%02f years: e = %f σ = %f σd = %f \n", y / (float) TRADING_DAYS_PER_YEAR, expectancy, standard_deviation, downside_deviation);
 		print_histogram (values);
