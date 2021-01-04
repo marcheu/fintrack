@@ -37,7 +37,7 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 	int position, steps;
 	steps = 0;
 	for (int i = 0; i < duration; i++) {
-		if ((steps % 20) == 0) {
+		if ((steps % MONTE_CARLO_BLOCK_SIZE) == 0) {
 			position = (start_day + curand (&state) % (days_back - 1)) % num_days;
 			steps = 0;
 		}
@@ -93,7 +93,7 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 			int position, steps;
 			steps = 0;
 			for (int i = 0; i < duration; i++) {
-				if ((steps % 20) == 0) {
+				if ((steps % MONTE_CARLO_BLOCK_SIZE) == 0) {
 					position = (start_day + rand () % (days_back - 1)) % num_days;
 					steps = 0;
 				}
