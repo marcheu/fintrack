@@ -21,17 +21,13 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
 	curandState_t state;
 
-	/* we have to initialize the state */
-	curand_init (seed,	/* the seed controls the sequence of random values that are produced */
-		     idx,	/* the sequence number is only important with multiple cores */
-		     0,		/* the offset is how much extra we advance in the sequence for each call, can be 0 */
-		     &state);
+	curand_init (seed, idx, 0, &state);
 
-	float p[512];
+	float p[GPU_SIMULATION_MAX_STOCKS];
 
 	memcpy (p, portfolio, num_stocks * sizeof (float));
 
-	const int duration = TRADING_DAYS_PER_YEAR * 1 / 2;	// half a year @ TRADING_DAYS_PER_YEAR trading days per year
+	const int duration = TRADING_DAYS_PER_YEAR / 2;	// half a year
 
 	int round = idx;
 	int position, steps;
@@ -58,6 +54,7 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 	for (unsigned stock = 0; stock < num_stocks; stock++)
 		expectancy += p[stock];
 
+	// We simulated half a year, but expectanty is easier to read as returns per year
 	expectancy_list[round] = expectancy * expectancy;
 }
 
@@ -69,6 +66,7 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 
 	if (use_gpu_) {
 		int num_stocks = historical_data_.size ();
+		assert (num_stocks < GPU_SIMULATION_MAX_STOCKS);
 
 		float *gpu_expectancy_list;
 		cudaMallocManaged (&gpu_expectancy_list, num_rounds * sizeof (float));
@@ -84,7 +82,7 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		cudaFree (gpu_expectancy_list);
 	}
 	else {
-		const int duration = TRADING_DAYS_PER_YEAR * 1 / 2;	// half a year @ TRADING_DAYS_PER_YEAR trading days per year
+		const int duration = TRADING_DAYS_PER_YEAR / 2;	// half a year
 		portfolio p2;
 
 		for (int round = 0; round < num_rounds; round++) {
@@ -113,7 +111,9 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 			float round_expectancy = 0.;
 			for (unsigned stock = 0; stock < historical_data_.size (); stock++)
 				round_expectancy += p2.proportions[stock];
-			expectancy_list.push_back (round_expectancy);
+
+			// We simulated half a year, but expectanty is easier to read as returns per year
+			expectancy_list.push_back (round_expectancy * round_expectancy);
 		}
 	}
 

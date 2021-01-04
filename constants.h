@@ -10,4 +10,12 @@
 // If it's too big the results are just a replay of history
 #define MONTE_CARLO_BLOCK_SIZE 20
 
+// The length of a single simulation in number of days. This is typically
+// the interval between two portfolio rebalances, or the maximum time you
+// can stomach a drawdown
+#define MONTE_CARLO_SIMULATION_DURATION (TRADING_DAYS_PER_YEAR / 2)
+
+// Max number of simultaneous tickers for the GPU simulation
+#define GPU_SIMULATION_MAX_STOCKS 512
+
 #endif
