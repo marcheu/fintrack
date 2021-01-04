@@ -93,7 +93,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 	int size = historical_data.size ();
 	float fitness = -FLT_MAX;
 	float expectancy, standard_deviation, downside_deviation;
-	int num_rounds = 16384;
+	int num_rounds = 1 << 14;
 	int stagnate = 0;
 
 	monte_carlo m (historical_data, true);
@@ -148,7 +148,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 	// Fine pass
 	stagnate = 0;
-	num_rounds = 32768;
+	num_rounds = 1 << 15;
 	while (stagnate < 10000) {
 		make_delta (delta, size);
 
@@ -172,7 +172,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 		stagnate++;
 
-		if ((stagnate == 5000) && (num_rounds < 65536)) {
+		if ((stagnate == 5000) && (num_rounds < 1 << 16)) {
 			num_rounds *= 2;
 			stagnate = 0;
 			printf ("rounds %d\n", num_rounds);

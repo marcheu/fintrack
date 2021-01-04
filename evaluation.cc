@@ -118,7 +118,7 @@ void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
 	monte_carlo m (data, true);
 
 	// evaluate each component
-	int num_rounds = 32768 * 16;
+	int num_rounds = 1 << 19;
 	for (unsigned i = 0; i < data.size (); i++) {
 		if (p.proportions[i] > 0.0f) {
 			portfolio single = p;
@@ -134,7 +134,7 @@ void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
 	// print correlation matrix
 	print_correlation_matrix (data);
 
-	num_rounds = 32768 * 128;
+	num_rounds = 1 << 22;
 
 	// evaluate at 0.5 1 2 4 10 years
 	std::vector < float >values;
