@@ -1,3 +1,4 @@
+#include "constants.h"
 #include "portfolio.h"
 #include "util.h"
 
@@ -65,7 +66,7 @@ void portfolio::max_proportions (std::vector < data_series > historical_data)
 
 
 
-	const float limit = 0.5f;
+	const float limit = PORTFOLIO_MAX_PROPORTION;
 
 	float over = 0.f;
 

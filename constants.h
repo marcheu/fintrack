@@ -18,4 +18,7 @@
 // Max number of simultaneous tickers for the GPU simulation
 #define GPU_SIMULATION_MAX_STOCKS 512
 
+// The maximum proportion of the portfolio allocated to a single investment
+#define PORTFOLIO_MAX_PROPORTION 0.5f
+
 #endif
