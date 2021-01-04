@@ -104,13 +104,21 @@ stock_list = [
 'NFLX'
 ]
 
+# Verify that destination directory exists
+for path in ['financial_data/etf', 'financial_data/stock']:
+    if not os.path.exists(path):
+        print(path, "does not exist, creating it.")
+        os.makedirs(path)
+
 for stock_name in etf_list:
-	series = data.DataReader(stock_name, 'yahoo', '1980-01-01')
-	series.to_csv(stock_name + '.csv')
-	os.rename(stock_name + '.csv', 'financial_data/etf/' + stock_name + '.csv')
+    print("Downloading ETF", stock_name)
+    series = data.DataReader(stock_name, 'yahoo', '1980-01-01')
+    series.to_csv(stock_name + '.csv')
+    os.rename(stock_name + '.csv', 'financial_data/etf/' + stock_name + '.csv')
 
 for stock_name in stock_list:
-	series = data.DataReader(stock_name, 'yahoo', '1980-01-01')
-	series.to_csv(stock_name + '.csv')
-	os.rename(stock_name + '.csv', 'financial_data/stock/' + stock_name + '.csv')
+    print("Downloading stock", stock_name)
+    series = data.DataReader(stock_name, 'yahoo', '1980-01-01')
+    series.to_csv(stock_name + '.csv')
+    os.rename(stock_name + '.csv', 'financial_data/stock/' + stock_name + '.csv')
 
