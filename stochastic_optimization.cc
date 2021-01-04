@@ -56,6 +56,21 @@ static float fitness_function (std::vector < data_series > &data, portfolio & p,
 	float factor2 = 0.f;
 	float factor3 = 0.f;
 
+	/* The fitness function that evaluates a portfolio has 3 main components:
+	 *
+	 * 1. We want to try to get at least the user-specific expectancy. Anything
+	 * above the goal is only a small win, anything below the goal is bad.
+	 *
+	 * 2. We want to minimize the risk, i.e. the downside deviation.
+	 *
+	 * 3. We try to get some diversification, i.e. don't put more than 100% in a
+	 * single sector (keep in mind we are leveraged so we can go to a total of 300%)
+	 *
+	 * We sum all 3 components into a single metric, which is the touchy part: how
+	 * much weight should be given to each is very much a personal preference.
+	 * These should be reasonable (?) defaults.
+	 */
+
 	// 1. Maximize expectancy
 	if (expectancy < goal)
 		factor1 = (goal - expectancy) * 6.0f;
