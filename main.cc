@@ -62,15 +62,15 @@ int main (int argc, char *argv[])
 
 	if (need_learn)
 		stochastic_optimization (data, p, false, TRADING_DAYS_PER_YEAR * 10, goal);
+
 	if (need_optimize)
 		stochastic_optimization (data, p, true, TRADING_DAYS_PER_YEAR * 10, goal);
 
-	if (need_evaluate) {
+	if (need_evaluate)
 		evaluate_portfolio (data, p);
-	}
 
-	if (need_write) {
+	if (need_write)
 		p.write (write_filename);
-	}
+
 	return 0;
 }
