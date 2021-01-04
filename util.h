@@ -14,5 +14,6 @@
 #define COLOR_UNINVERT "\x1B[27m"
 
 void print_bar (float value);
+void print_histogram (std::vector < float >values);
 
 #endif
