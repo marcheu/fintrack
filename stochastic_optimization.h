@@ -1,5 +1,5 @@
-#ifndef _GRADIENT_DESCENT_H_
-#define _GRADIENT_DESCENT_H_
+#ifndef _STOCHASTIC_OPTIMIZATION_H_
+#define _STOCHASTIC_OPTIMIZATION_H_
 
 #include "data_series.h"
 #include "portfolio.h"
