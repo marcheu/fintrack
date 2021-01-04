@@ -1,3 +1,4 @@
+#include "constants.h"
 #include "evaluation.h"
 #include "includes.h"
 #include "loader.h"
@@ -60,9 +61,9 @@ int main (int argc, char *argv[])
 	}
 
 	if (need_learn)
-		stochastic_optimization (data, p, false, 253 * 10, goal);
+		stochastic_optimization (data, p, false, TRADING_DAYS_PER_YEAR * 10, goal);
 	if (need_optimize)
-		stochastic_optimization (data, p, true, 253 * 10, goal);
+		stochastic_optimization (data, p, true, TRADING_DAYS_PER_YEAR * 10, goal);
 
 	if (need_evaluate) {
 		evaluate_portfolio (data, p);

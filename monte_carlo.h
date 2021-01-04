@@ -1,6 +1,7 @@
 #ifndef _SIMULATION_H_
 #define _SIMULATION_H_
 
+#include "constants.h"
 #include "data_series.h"
 #include "includes.h"
 #include "portfolio.h"
@@ -8,8 +9,8 @@
 class monte_carlo {
       public:
 	monte_carlo (std::vector < data_series > &historical_data, bool use_gpu);
-	void run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back = 253 * 4 /*INT_MAX */ );
-	void run (portfolio & p, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back = 253 * 4 /*INT_MAX */ );
+	void run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back = TRADING_DAYS_PER_YEAR * 4);
+	void run (portfolio & p, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back = TRADING_DAYS_PER_YEAR * 4);
 
       private:
 	  std::vector < data_series > &historical_data_;

@@ -31,7 +31,7 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 
 	memcpy (p, portfolio, num_stocks * sizeof (float));
 
-	const int duration = 253 * 1 / 2;	// half a year @ 253 trading days per year
+	const int duration = TRADING_DAYS_PER_YEAR * 1 / 2;	// half a year @ TRADING_DAYS_PER_YEAR trading days per year
 
 	int round = idx;
 	int position, steps;
@@ -84,7 +84,7 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		cudaFree (gpu_expectancy_list);
 	}
 	else {
-		const int duration = 253 * 1 / 2;	// half a year @ 253 trading days per year
+		const int duration = TRADING_DAYS_PER_YEAR * 1 / 2;	// half a year @ TRADING_DAYS_PER_YEAR trading days per year
 		portfolio p2;
 
 		for (int round = 0; round < num_rounds; round++) {
