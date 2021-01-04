@@ -103,5 +103,3 @@ void print_histogram (std::vector < float >values)
 	}
 	printf (COLOR_NORMAL);
 }
-
-
