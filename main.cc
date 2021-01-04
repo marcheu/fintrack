@@ -67,7 +67,7 @@ int main (int argc, char *argv[])
 		evaluate_portfolio (data, p);
 
 	if (need_write)
-		p.write (write_filename);
+		p.write (write_filename, data);
 
 	return 0;
 }

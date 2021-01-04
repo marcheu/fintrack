@@ -11,7 +11,7 @@ class portfolio {
 	int size_;
 
 	void read (const char *file_name, std::vector < data_series > data);
-	void write (const char *file_name);
+	void write (const char *file_name, std::vector < data_series > data);
 
 	void randomize (std::vector < data_series > data);
 	void normalize ();

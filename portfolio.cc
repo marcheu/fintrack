@@ -34,9 +34,16 @@ void portfolio::read (const char *file_name, std::vector < data_series > data)
 	fclose (f);
 }
 
-void portfolio::write (const char *file_name)
+void portfolio::write (const char *file_name, std::vector < data_series > data)
 {
-	assert (0);
+	FILE *f = fopen (file_name, "wb");
+
+	assert (f);
+
+	for (int i = 0; i < size_; i++)
+		if (proportions[i] >= 0.001)
+			fprintf (f, "%s %f\n", data[i].name, proportions[i]);
+	fclose(f);
 }
 
 void portfolio::randomize (std::vector < data_series > data)
