@@ -19,6 +19,10 @@ monte_carlo::monte_carlo (std::vector < data_series > &historical_data, bool use
 __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, int num_days, float *historical_data, int start_day, int days_back, float *portfolio, float *expectancy_list)
 {
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if (idx >= num_rounds)
+		return;
+
 	curandState_t state;
 
 	curand_init (seed, idx, 0, &state);
@@ -72,7 +76,7 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		cudaMallocManaged (&gpu_expectancy_list, num_rounds * sizeof (float));
 
 		memcpy (gpu_portfolio_, p.proportions, num_stocks * sizeof (float));
-		run_simulation <<< num_rounds / 256, 256 >>> (rand (), num_rounds, num_stocks, num_days, gpu_historical_data_, start_day, days_back, gpu_portfolio_, gpu_expectancy_list);
+		run_simulation <<< (num_rounds + 255)/ 256, 256 >>> (rand (), num_rounds, num_stocks, num_days, gpu_historical_data_, start_day, days_back, gpu_portfolio_, gpu_expectancy_list);
 
 		cudaDeviceSynchronize ();
 
@@ -118,21 +122,21 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 	}
 
 	// calculate expectancy
-	double expectancy_d = 0.f;
+	double expectancy_d = 0.;
 	for (int i = 0; i < num_rounds; i++)
 		expectancy_d += expectancy_list[i];
 	expectancy_d /= (double) num_rounds;
 	expectancy = expectancy_d;
 
 	// calculate standard deviation
-	double standard_deviation_d = 0.f;
+	double standard_deviation_d = 0.;
 	for (int i = 0; i < num_rounds; i++)
 		standard_deviation_d += (expectancy_list[i] - expectancy_d) * (expectancy_list[i] - expectancy_d);
 	standard_deviation_d = sqrt (standard_deviation_d / (double) num_rounds);
 	standard_deviation = standard_deviation_d;
 
 	// calculate downside deviation
-	double downside_deviation_d = 0.f;
+	double downside_deviation_d = 0.;
 	for (int i = 0; i < num_rounds; i++)
 		if (expectancy_list[i] < expectancy)
 			downside_deviation_d += (expectancy_list[i] - expectancy_d) * (expectancy_list[i] - expectancy_d);

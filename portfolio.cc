@@ -6,7 +6,7 @@ void portfolio::read (const char *file_name, std::vector < data_series > data)
 {
 	char dummy_line[1024];
 
-	FILE *f = fopen (file_name, "rb");
+	FILE *f = fopen (file_name, "r");
 
 	assert (f);
 
