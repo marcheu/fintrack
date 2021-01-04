@@ -119,9 +119,8 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 
 	// calculate expectancy
 	double expectancy_d = 0.f;
-	for (int i = 0; i < num_rounds; i++) {
+	for (int i = 0; i < num_rounds; i++)
 		expectancy_d += expectancy_list[i];
-	}
 	expectancy_d /= (double) num_rounds;
 	expectancy = expectancy_d;
 
