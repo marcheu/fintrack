@@ -21,6 +21,7 @@ etf_list = [
 'LTL',
 'MGK',
 'MIDU',
+'MSEGX',
 'MVV',
 'NUGT',
 'QLD',
