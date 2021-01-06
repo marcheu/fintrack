@@ -30,19 +30,9 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 	const int duration = MONTE_CARLO_SIMULATION_DURATION;
 
 	int round = idx;
-	int position, steps;
-	steps = 0;
+	int position;
 	for (int i = 0; i < duration; i++) {
-		if ((steps % MONTE_CARLO_BLOCK_SIZE) == 0) {
-			position = (start_day + curand (&state) % (days_back - 1)) % num_days;
-			steps = 0;
-		}
-		else {
-			position++;
-			if (position >= num_days)
-				position = 0;
-			steps++;
-		}
+		position = (start_day + curand (&state) % (days_back - 1)) % num_days;
 
 		for (unsigned stock = 0; stock < num_stocks; stock++) {
 			float factor = (historical_data[stock * num_days + position + 1] / historical_data[stock * num_days + position]);
@@ -88,19 +78,9 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		for (int round = 0; round < num_rounds; round++) {
 			p2 = p;
 
-			int position, steps;
-			steps = 0;
+			int position;
 			for (int i = 0; i < duration; i++) {
-				if ((steps % MONTE_CARLO_BLOCK_SIZE) == 0) {
-					position = (start_day + rand () % (days_back - 1)) % num_days;
-					steps = 0;
-				}
-				else {
-					position++;
-					if (position >= num_days)
-						position = 0;
-					steps++;
-				}
+				position = (start_day + rand () % (days_back - 1)) % num_days;
 
 				for (unsigned stock = 0; stock < historical_data_.size (); stock++) {
 					float factor = (historical_data_[stock].values[position + 1] / historical_data_[stock].values[position]);
