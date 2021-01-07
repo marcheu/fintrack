@@ -9,6 +9,7 @@
 class monte_carlo {
       public:
 	monte_carlo (std::vector < data_series > &historical_data, bool use_gpu);
+	~monte_carlo ();
 	void run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back = TRADING_DAYS_PER_YEAR * 4);
 	void run (portfolio & p, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back = TRADING_DAYS_PER_YEAR * 4);
 

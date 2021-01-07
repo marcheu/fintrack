@@ -8,11 +8,22 @@ monte_carlo::monte_carlo (std::vector < data_series > &historical_data, bool use
 {
 	if (use_gpu_) {
 		int num_stocks = historical_data_.size ();
+		int num_days = historical_data_[0].size;
 		cudaMallocManaged (&gpu_historical_data_, historical_data.size () * historical_data[0].size * sizeof (float));
-		for (unsigned stock = 0; stock < historical_data_.size (); stock++) {
-			memcpy (gpu_historical_data_ + stock * historical_data[0].size, historical_data_[stock].values, sizeof (float) * historical_data_[0].size);
-		}
+		// We pre-divide pairs of days
+		for (unsigned stock = 0; stock < historical_data_.size (); stock++)
+			for(int day = 0; day < num_days - 1; day++)
+				gpu_historical_data_[stock * num_days + day] = historical_data_[stock].values[day + 1] / historical_data_[stock].values[day];
+
 		cudaMallocManaged (&gpu_portfolio_, num_stocks * sizeof (float));
+	}
+}
+
+monte_carlo::~monte_carlo()
+{
+	if (use_gpu_) {
+		cudaFree (gpu_historical_data_);
+		cudaFree (gpu_portfolio_);
 	}
 }
 
@@ -35,7 +46,7 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 		position = (start_day + curand (&state) % (days_back - 1)) % (num_days - 1);
 
 		for (unsigned stock = 0; stock < num_stocks; stock++) {
-			float factor = (historical_data[stock * num_days + position + 1] / historical_data[stock * num_days + position]);
+			float factor = historical_data[stock * num_days + position];
 			p[stock] *= factor;
 		}
 	}
