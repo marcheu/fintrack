@@ -12,14 +12,14 @@ monte_carlo::monte_carlo (std::vector < data_series > &historical_data, bool use
 		cudaMallocManaged (&gpu_historical_data_, historical_data.size () * historical_data[0].size * sizeof (float));
 		// We pre-divide pairs of days
 		for (unsigned stock = 0; stock < historical_data_.size (); stock++)
-			for(int day = 0; day < num_days - 1; day++)
+			for (int day = 0; day < num_days - 1; day++)
 				gpu_historical_data_[stock * num_days + day] = historical_data_[stock].values[day + 1] / historical_data_[stock].values[day];
 
 		cudaMallocManaged (&gpu_portfolio_, num_stocks * sizeof (float));
 	}
 }
 
-monte_carlo::~monte_carlo()
+monte_carlo::~monte_carlo ()
 {
 	if (use_gpu_) {
 		cudaFree (gpu_historical_data_);
