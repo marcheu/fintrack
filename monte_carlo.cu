@@ -46,6 +46,8 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 		position = (start_day + curand (&state) % (days_back - 1)) % (num_days - 1);
 
 		for (unsigned stock = 0; stock < num_stocks; stock++) {
+			if (p[stock] == 0.f)
+				continue;
 			float factor = historical_data[position * num_stocks + stock];
 			p[stock] *= factor;
 		}
