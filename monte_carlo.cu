@@ -7,7 +7,7 @@
 monte_carlo::monte_carlo (std::vector < data_series > &historical_data, bool use_gpu):historical_data_ (historical_data), use_gpu_ (use_gpu)
 {
 	if (use_gpu_) {
-		int num_stocks = historical_data_.size ();
+		unsigned num_stocks = historical_data_.size ();
 		int num_days = historical_data_[0].size;
 		cudaMallocManaged (&gpu_historical_data_, historical_data.size () * historical_data[0].size * sizeof (float));
 		// We pre-divide pairs of days
@@ -79,7 +79,7 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		cudaMallocManaged (&gpu_expectancy_list, num_rounds * sizeof (float));
 
 		memcpy (gpu_portfolio_, p.proportions, num_stocks * sizeof (float));
-		run_simulation <<< (num_rounds + 255)/ 256, 256 >>> (rand (), num_rounds, num_stocks, num_days, gpu_historical_data_, start_day, days_back, gpu_portfolio_, gpu_expectancy_list);
+		run_simulation <<< (num_rounds + 255) / 256, 256 >>> (rand (), num_rounds, num_stocks, num_days, gpu_historical_data_, start_day, days_back, gpu_portfolio_, gpu_expectancy_list);
 
 		cudaDeviceSynchronize ();
 
