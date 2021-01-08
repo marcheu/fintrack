@@ -1,6 +1,13 @@
 #include "includes.h"
 #include "util.h"
 
+uint64_t get_time_us ()
+{
+	struct timeval tv;
+	gettimeofday (&tv, NULL);
+	return tv.tv_sec * 1000000ULL + tv.tv_usec;
+}
+
 static void print_char (float v)
 {
 	if (v >= 8.f / 8.f)

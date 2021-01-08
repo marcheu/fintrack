@@ -15,5 +15,6 @@
 
 void print_bar (float value);
 void print_histogram (std::vector < float >values);
+uint64_t get_time_us ();
 
 #endif
