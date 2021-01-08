@@ -5,6 +5,7 @@
 #include "monte_carlo.h"
 #include "portfolio.h"
 #include "stochastic_optimization.h"
+#include "tests.h"
 #include "util.h"
 
 int main (int argc, char *argv[])
@@ -44,7 +45,7 @@ int main (int argc, char *argv[])
 
 	std::vector < data_series > data;
 	loader l;
-	l.load_all_series (data, need_stocks, need_test);
+	l.load_all_series (data, need_stocks, false);
 
 	portfolio p;
 	if (need_read) {
@@ -56,6 +57,9 @@ int main (int argc, char *argv[])
 		p.randomize (data);
 		p.normalize ();
 	}
+
+	if (need_test)
+		run_tests ();
 
 	if (need_learn)
 		stochastic_optimization (data, p, false, TRADING_DAYS_PER_YEAR * 10, goal);
