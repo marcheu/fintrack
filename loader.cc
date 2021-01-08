@@ -53,9 +53,8 @@ class file_iterator_real:public file_iterator {
 	void reset (bool use_stocks) {
 		etf_dir = false;
 		stock_dir = !use_stocks;
+		d = NULL;
 	} bool run (char *filename) {
-		static DIR *d = NULL;
-
 		if (!etf_dir) {
 			d = opendir (data_dir_etf);
 			assert (d);
@@ -85,11 +84,12 @@ class file_iterator_real:public file_iterator {
 		}
 	}
 	~file_iterator_real () {
+		d = NULL;
 	}
       private:
 	bool etf_dir;
 	bool stock_dir;
-
+	DIR *d;
 };
 
 int loader::number_of_csv (file_iterator * it, bool use_stocks)
