@@ -19,6 +19,8 @@ add_executable( fintrack
   portfolio.h
   stochastic_optimization.cc
   stochastic_optimization.h
+  tests.cc
+  tests.h
   util.cc
   util.h
 )
