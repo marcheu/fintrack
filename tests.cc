@@ -66,13 +66,13 @@ static void run_performance_tests (std::vector < data_series > data)
 	printf ("GPU monte carlo: %f simulations per second\n", 10.f * num_rounds / ((after - before) / 1000000.0f));
 }
 
-static void run_expectancy_tests(std::vector < data_series > data)
+static void run_expectancy_tests (std::vector < data_series > data)
 {
 	printf ("=== Expectancy tests ===\n");
 	portfolio p;
 
 	p.proportions[0] = 1.0;
-	for(int i = 1; i < p.size_; i++)
+	for (int i = 1; i < p.size_; i++)
 		p.proportions[i] = 0;
 
 	int num_rounds = 1 << 16;
@@ -82,12 +82,12 @@ static void run_expectancy_tests(std::vector < data_series > data)
 	monte_carlo m_cpu (data, false);
 	m_cpu.run (p, cpu_expectancy, cpu_standard_deviation, cpu_downside_deviation, num_rounds);
 	printf ("CPU monte carlo: e = %f σ = %f σd = %f\n", cpu_expectancy, cpu_standard_deviation, cpu_downside_deviation);
-	assert(fabs (cpu_expectancy - 1.1f) < 0.001f);
+	assert (fabs (cpu_expectancy - 1.1f) < 0.001f);
 
 	monte_carlo m_gpu (data, true);
 	m_gpu.run (p, gpu_expectancy, gpu_standard_deviation, gpu_downside_deviation, num_rounds);
 	printf ("GPU monte carlo: e = %f σ = %f σd = %f\n", gpu_expectancy, gpu_standard_deviation, gpu_downside_deviation);
-	assert(fabs (gpu_expectancy - 1.1f) < 0.001f);
+	assert (fabs (gpu_expectancy - 1.1f) < 0.001f);
 }
 
 void run_tests ()
