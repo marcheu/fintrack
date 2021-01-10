@@ -8,15 +8,21 @@ etf_list = [
 'BIB',
 'BIV',
 'BND',
+'CHAU',
+'CWEB',
 'CURE',
 'DDM',
 'DIG',
+'EDC',
 'EDV',
 'EET',
 'EFO',
 'ERX',
 'EZJ',
 'FAS',
+'GUSH',
+'INDL',
+'JNUG',
 'LABU',
 'LTL',
 'MGK',
@@ -36,6 +42,8 @@ etf_list = [
 'TMF',
 'TNA',
 'TQQQ',
+'TTT',
+'TYD',
 'UBR',
 'UBT',
 'UST',
@@ -88,7 +96,8 @@ etf_list = [
 'VUG',
 'VWO',
 'VXF',
-'XPP'
+'XPP',
+'YINN'
 ]
 
 

@@ -31,7 +31,8 @@ class file_iterator_test:public file_iterator {
 		strcat (szDir, "*");
 		memset (&ffd, 0, sizeof (ffd));
 		hFind = INVALID_HANDLE_VALUE;
-	} bool run (char *filename) {
+	}
+	bool run (char *filename) {
 	      again:
 		if (hFind == INVALID_HANDLE_VALUE)
 			hFind = FindFirstFile (szDir, &ffd);
@@ -65,7 +66,8 @@ class file_iterator_real:public file_iterator_test {
 		strcat (szDir, "*");
 		memset (&ffd, 0, sizeof (ffd));
 		hFind = INVALID_HANDLE_VALUE;
-}};
+	}
+};
 
 #else
 class file_iterator_test:public file_iterator {
@@ -294,10 +296,13 @@ void loader::load_sectors (std::vector < data_series > &data)
 	char *s = fgets (dummy_line, sizeof (dummy_line), f);
 	assert (s != NULL);
 
-	int i = 0;
+	for (unsigned i = 0; i < data.size (); i++)
+		data[i].leverage = 0.f;
+
 	while (fgets (dummy_line, sizeof (dummy_line), f)) {
 		float values[NUM_SECTORS], leverage;
 		char *data_line = &dummy_line[0];
+		int index;
 		while (data_line[0] != ',')
 			data_line++;
 		data_line[0] = 0;
@@ -318,12 +323,16 @@ void loader::load_sectors (std::vector < data_series > &data)
 				&values[12],
 				&leverage);
 		assert (r == 14);
-		i = index_of (data, dummy_line);
-		if (i == -1)
+		index = index_of (data, dummy_line);
+		if (index == -1)
 			continue;
-		memcpy (data[i].sector_proportions, values, sizeof (float) * NUM_SECTORS);
-		data[i].leverage = leverage;
+		memcpy (data[index].sector_proportions, values, sizeof (float) * NUM_SECTORS);
+		data[index].leverage = leverage;
 	}
+
+	for (unsigned i = 0; i < data.size (); i++)
+		if (data[i].leverage == 0.f)
+			printf ("Warning: %s doesn't have sectors\n", data[i].name);
 }
 
 void loader::load_all_series (std::vector < data_series > &data, bool use_stocks, bool use_test)
