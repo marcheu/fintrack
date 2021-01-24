@@ -14,6 +14,7 @@ class portfolio {
 	void write (const char *file_name, std::vector < data_series > data);
 
 	void randomize (std::vector < data_series > data);
+	void constant (std::vector < data_series > data);
 	void normalize ();
 	void max_proportions (std::vector < data_series > historical_data);
 	void print (std::vector < data_series > historical_data);

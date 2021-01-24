@@ -46,6 +46,14 @@ void portfolio::write (const char *file_name, std::vector < data_series > data)
 	fclose (f);
 }
 
+void portfolio::constant (std::vector < data_series > data)
+{
+	size_ = data.size ();
+
+	for (int i = 0; i < size_; i++)
+		proportions[i] = 1.0f;
+}
+
 void portfolio::randomize (std::vector < data_series > data)
 {
 	size_ = data.size ();

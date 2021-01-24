@@ -50,7 +50,7 @@ static void one (portfolio & p, int size)
 		p.proportions[i] = 1.f;
 }
 
-static float fitness_function (std::vector < data_series > &data, portfolio & p, float expectancy, float standard_deviation, float downside_deviation, float goal)
+static float fitness_function (std::vector < data_series > &data, portfolio & p, float expectancy, float downsize_75_deviation, float goal)
 {
 	float factor1 = 0.f;
 	float factor2 = 0.f;
@@ -73,12 +73,12 @@ static float fitness_function (std::vector < data_series > &data, portfolio & p,
 
 	// 1. Maximize expectancy
 	if (expectancy < goal)
-		factor1 = (goal - expectancy) * 6.0f;
+		factor1 = (goal - expectancy) * 5.0f;
 	else
-		factor1 = expectancy * -0.1f;
+		factor1 = expectancy * -0.01f;
 
-	// 2. Minimize downside deviation
-	factor2 = downside_deviation * 6.f;
+	// 2. Minimize downside 75 deviation
+	factor2 = downsize_75_deviation * 50.f;
 
 	// 3. Try to get some diversification
 	float sectors[NUM_SECTORS], total = 0.f;
@@ -95,7 +95,7 @@ static float fitness_function (std::vector < data_series > &data, portfolio & p,
 	for (unsigned s = 0; s < NUM_SECTORS; s++)
 		if (sectors[s] > 100.f)
 			factor3 += (sectors[s] - 100.f);
-	factor3 /= 50.f;
+	factor3 /= 100.f;
 
 	return -factor1 - factor2 - factor3;
 }
@@ -107,15 +107,15 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 	int iteration = 0;
 	int size = historical_data.size ();
 	float fitness = -FLT_MAX;
-	float expectancy, standard_deviation, downside_deviation;
-	int num_rounds = 1 << 14;
+	float expectancy, standard_deviation, downside_deviation, downsize_75_deviation;
+	int num_rounds = 1 << 16;
 	int stagnate = 0;
 
 	monte_carlo m (historical_data, true);
 
 	p.print (historical_data);
-	m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
-	fitness = fitness_function (historical_data, p, expectancy, standard_deviation, downside_deviation, goal);
+	m.run (p, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, days_back);
+	fitness = fitness_function (historical_data, p, expectancy, downsize_75_deviation, goal);
 
 
 	if (!refine) {
@@ -125,8 +125,8 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 		p.normalize ();
 
 		// Coarse pass
-		m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
-		fitness = fitness_function (historical_data, p, expectancy, standard_deviation, downside_deviation, goal);
+		m.run (p, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, days_back);
+		fitness = fitness_function (historical_data, p, expectancy, downsize_75_deviation, goal);
 
 		float factor = 0.5f;
 		while (stagnate < 2000) {
@@ -138,12 +138,12 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 			p_new.normalize ();
 			p_new.max_proportions (historical_data);
 
-			m.run (p_new, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
-			float new_fitness = fitness_function (historical_data, p, expectancy, standard_deviation, downside_deviation, goal);
+			m.run (p_new, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, days_back);
+			float new_fitness = fitness_function (historical_data, p, expectancy, downsize_75_deviation, goal);
 			if (new_fitness > fitness) {
 				p = p_new;
 				fitness = new_fitness;
-				printf ("fitness now %f e = %f σ = %f σd = %f \n", fitness, expectancy, standard_deviation, downside_deviation);
+				printf ("fitness now %f e = %f σ = %f σd = %f σd75 = %f \n", fitness, expectancy, standard_deviation, downside_deviation, downsize_75_deviation);
 				stagnate = 0;
 				p.print (historical_data);
 				goto do_it_again;
@@ -163,7 +163,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 	// Fine pass
 	stagnate = 0;
-	num_rounds = 1 << 15;
+	num_rounds = 1 << 16;
 	while (stagnate < 10000) {
 		make_delta (delta, size);
 
@@ -173,13 +173,13 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 		p_new.normalize ();
 		p_new.max_proportions (historical_data);
 
-		m.run (p_new, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
-		float new_fitness = fitness_function (historical_data, p, expectancy, standard_deviation, downside_deviation, goal);
+		m.run (p_new, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, days_back);
+		float new_fitness = fitness_function (historical_data, p, expectancy, downsize_75_deviation, goal);
 		if (new_fitness > fitness) {
 			stagnate = 0;
 			p = p_new;
 			fitness = new_fitness;
-			printf ("fitness now %f e = %f σ = %f σd = %f \n", fitness, expectancy, standard_deviation, downside_deviation);
+			printf ("fitness now %f e = %f σ = %f σd = %f σd75 = %f \n", fitness, expectancy, standard_deviation, downside_deviation, downsize_75_deviation);
 			p.print (historical_data);
 			goto do_it_again2;
 		}
@@ -187,18 +187,18 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 		stagnate++;
 
-		if ((stagnate == 5000) && (num_rounds < 1 << 16)) {
+		if ((stagnate == 5000) && (num_rounds < 1 << 17)) {
 			num_rounds *= 2;
 			stagnate = 0;
 			printf ("rounds %d\n", num_rounds);
-			m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
-			fitness = fitness_function (historical_data, p, expectancy, standard_deviation, downside_deviation, goal);
+			m.run (p, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, days_back);
+			fitness = fitness_function (historical_data, p, expectancy, downsize_75_deviation, goal);
 		}
 	}
 
 	p.print_as_file (historical_data);
 	for (int l = 0; l < 10; l++) {
-		m.run (p, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
-		printf ("e = %f σ = %f σd = %f \n", expectancy, standard_deviation, downside_deviation);
+		m.run (p, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, days_back);
+		printf ("e = %f σ = %f σd = %f σd75 = %f \n", expectancy, standard_deviation, downside_deviation, downsize_75_deviation);
 	}
 }

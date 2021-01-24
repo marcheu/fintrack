@@ -54,7 +54,7 @@ int main (int argc, char *argv[])
 		p.print (data);
 	}
 	else {
-		p.randomize (data);
+		p.constant (data);
 		p.normalize ();
 	}
 

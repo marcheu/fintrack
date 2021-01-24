@@ -58,7 +58,7 @@ static void print_correlation_matrix (std::vector < data_series > &data)
 
 void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
 {
-	float expectancy, standard_deviation, downside_deviation;
+	float expectancy, standard_deviation, downside_deviation, downsize_75_deviation;
 	monte_carlo m (data, true);
 
 	// evaluate each component
@@ -70,7 +70,7 @@ void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
 				if (j != i)
 					single.proportions[j] = 0.f;
 			single.normalize ();
-			m.run (single, expectancy, standard_deviation, downside_deviation, num_rounds);
+			m.run (single, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds);
 			printf ("  %5s e = %f σ = %f σd = %f \n", data[i].name, expectancy, standard_deviation, downside_deviation);
 		}
 	}
@@ -85,7 +85,7 @@ void evaluate_portfolio (std::vector < data_series > &data, portfolio & p)
 	int intervals[] = { TRADING_DAYS_PER_YEAR / 2, 1 * TRADING_DAYS_PER_YEAR, 2 * TRADING_DAYS_PER_YEAR, 4 * TRADING_DAYS_PER_YEAR, 10 * TRADING_DAYS_PER_YEAR };
 	for (int i = 0; i < 5; i++) {
 		int y = intervals[i];
-		m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, num_rounds, y);
+		m.run_with_data (p, values, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, y);
 		printf ("%02f years: e = %f σ = %f σd = %f \n", y / (float) TRADING_DAYS_PER_YEAR, expectancy, standard_deviation, downside_deviation);
 		print_histogram (values);
 		values.clear ();

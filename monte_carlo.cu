@@ -65,7 +65,7 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 	expectancy_list[round] = expectancy * expectancy;
 }
 
-void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back)
+void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, float &downside_deviation, float &downsize_75_deviation, int num_rounds, int days_back)
 {
 	int num_days = historical_data_[0].size;
 	days_back = min (num_days, days_back);
@@ -135,10 +135,18 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 			downside_deviation_d += (expectancy_list[i] - expectancy_d) * (expectancy_list[i] - expectancy_d);
 	downside_deviation_d = sqrt (downside_deviation_d / (double) num_rounds);
 	downside_deviation = downside_deviation_d;
+
+	// calculate downsize_75 deviation (less than 75% left, more than 25% loss)
+	double downsize_75_deviation_d = 0.;
+	for (int i = 0; i < num_rounds; i++)
+		if (expectancy_list[i] < 0.75)
+			downsize_75_deviation_d += (expectancy_list[i] - 0.75) * (expectancy_list[i] - 0.75);
+	downsize_75_deviation_d = sqrt (downsize_75_deviation_d / (double) num_rounds);
+	downsize_75_deviation = downsize_75_deviation_d;
 }
 
-void monte_carlo::run (portfolio & p, float &expectancy, float &standard_deviation, float &downside_deviation, int num_rounds, int days_back)
+void monte_carlo::run (portfolio & p, float &expectancy, float &standard_deviation, float &downside_deviation, float &downsize_75_deviation, int num_rounds, int days_back)
 {
 	std::vector < float >dummy_list;
-	run_with_data (p, dummy_list, expectancy, standard_deviation, downside_deviation, num_rounds, days_back);
+	run_with_data (p, dummy_list, expectancy, standard_deviation, downside_deviation, downsize_75_deviation, num_rounds, days_back);
 }
