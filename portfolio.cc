@@ -10,6 +10,9 @@ void portfolio::read (const char *file_name, std::vector < data_series > data)
 
 	assert (f);
 
+	for (unsigned i = 0; i < ARRAY_SIZE (proportions); i++)
+		proportions[i] = 0.f;
+
 	while (fgets (dummy_line, sizeof (dummy_line), f)) {
 		char name[256];
 		float value;
