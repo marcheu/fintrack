@@ -4,6 +4,8 @@ project( fintrack LANGUAGES CUDA CXX C)
 set (CMAKE_CUDA_ARCHITECTURES 50 60 70)
 
 add_executable( fintrack
+  backtest.h
+  backtest.cc
   constants.h
   data_series.h
   date.h

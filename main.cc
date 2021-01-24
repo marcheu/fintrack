@@ -1,3 +1,4 @@
+#include "backtest.h"
 #include "constants.h"
 #include "evaluation.h"
 #include "includes.h"
@@ -14,7 +15,7 @@ int main (int argc, char *argv[])
 	char *read_filename = NULL, *write_filename = NULL;
 	float goal = 1.65f;	// default 65% target gain per year
 
-	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_test = false, need_stocks = false;
+	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_backtest = false, need_test = false, need_stocks = false;
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp (argv[i], "-o"))
@@ -33,6 +34,8 @@ int main (int argc, char *argv[])
 			i++;
 			write_filename = argv[i];
 		}
+		else if (!strcmp (argv[i], "-b"))
+			need_backtest = true;
 		else if (!strcmp (argv[i], "-e"))
 			need_evaluate = true;
 		else if (!strcmp (argv[i], "-t"))
@@ -69,6 +72,9 @@ int main (int argc, char *argv[])
 
 	if (need_evaluate)
 		evaluate_portfolio (data, p);
+
+	if (need_backtest)
+		backtest_portfolio (data, p);
 
 	if (need_write)
 		p.write (write_filename, data);
