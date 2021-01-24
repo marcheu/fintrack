@@ -129,7 +129,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 		fitness = fitness_function (historical_data, p, expectancy, downsize_75_deviation, goal);
 
 		float factor = 0.5f;
-		while (stagnate < 2000) {
+		while (stagnate < 4000) {
 			make_single_delta (delta, iteration % size, size, factor);
 
 		      do_it_again:
@@ -151,7 +151,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 			iteration++;
 
 			stagnate++;
-			if ((stagnate == 2000) && factor > 0.1f) {
+			if ((stagnate == 4000) && factor > 0.1f) {
 				factor /= 1.5f;
 				stagnate = 0;
 				printf ("new factor %f\n", factor);
