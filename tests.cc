@@ -26,10 +26,10 @@ static void run_cpu_gpu_tests (std::vector < data_series > data)
 		m_gpu.run (p, gpu_expectancy, gpu_standard_deviation, gpu_downside_deviation, gpu_downsize_75_deviation, num_rounds);
 		printf ("GPU monte carlo: e = %f σ = %f σd = %f σd75 = %f \n", gpu_expectancy, gpu_standard_deviation, gpu_downside_deviation, gpu_downsize_75_deviation);
 
-		assert (fabs (cpu_expectancy - gpu_expectancy) < 0.00001f);
-		assert (fabs (cpu_standard_deviation - gpu_standard_deviation) < 0.00001f);
-		assert (fabs (cpu_downside_deviation - gpu_downside_deviation) < 0.00001f);
-		assert (fabs (cpu_downsize_75_deviation - gpu_downsize_75_deviation) < 0.00001f);
+		assert (fabs (cpu_expectancy - gpu_expectancy) < 0.000001f);
+		assert (fabs (cpu_standard_deviation - gpu_standard_deviation) < 0.000001f);
+		assert (fabs (cpu_downside_deviation - gpu_downside_deviation) < 0.000001f);
+		assert (fabs (cpu_downsize_75_deviation - gpu_downsize_75_deviation) < 0.000001f);
 	}
 }
 
