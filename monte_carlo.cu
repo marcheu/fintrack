@@ -76,15 +76,22 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 		assert (num_stocks < GPU_SIMULATION_MAX_STOCKS);
 
 		float *gpu_expectancy_list;
-		cudaMallocManaged (&gpu_expectancy_list, num_rounds * sizeof (float));
 
-		memcpy (gpu_portfolio_, p.proportions, num_stocks * sizeof (float));
-		run_simulation <<< (num_rounds + 255) / 256, 256 >>> (rand (), num_rounds, num_stocks, num_days, gpu_historical_data_, start_day, days_back, gpu_portfolio_, gpu_expectancy_list);
+		// Small GPU optimization: we do rounds of 1 << 17 at most, since this is faster.
+		cudaMallocManaged (&gpu_expectancy_list, (1 << 17) * sizeof (float));
 
-		cudaDeviceSynchronize ();
+		int remaining_rounds = num_rounds;
+		while (remaining_rounds > 0) {
+			int gpu_rounds = min (remaining_rounds, 1 << 17);
 
-		for (int i = 0; i < num_rounds; i++)
-			expectancy_list.push_back (gpu_expectancy_list[i]);
+			memcpy (gpu_portfolio_, p.proportions, num_stocks * sizeof (float));
+			run_simulation <<< (gpu_rounds + 255) / 256, 256 >>> (rand (), gpu_rounds, num_stocks, num_days, gpu_historical_data_, start_day, days_back, gpu_portfolio_, gpu_expectancy_list);
+			cudaDeviceSynchronize ();
+
+			for (int i = 0; i < gpu_rounds; i++)
+				expectancy_list.push_back (gpu_expectancy_list[i]);
+			remaining_rounds -= gpu_rounds;
+		}
 
 		cudaFree (gpu_expectancy_list);
 	}
