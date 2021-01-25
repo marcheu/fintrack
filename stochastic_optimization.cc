@@ -73,7 +73,7 @@ static float fitness_function (std::vector < data_series > &data, portfolio & p,
 
 	// 1. Maximize expectancy
 	if (expectancy < goal)
-		factor1 = (goal - expectancy) * 5.0f;
+		factor1 = (goal - expectancy) * 6.0f;
 	else
 		factor1 = expectancy * -0.01f;
 
@@ -108,7 +108,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 	int size = historical_data.size ();
 	float fitness = -FLT_MAX;
 	float expectancy, standard_deviation, downside_deviation, downsize_75_deviation;
-	int num_rounds = 1 << 16;
+	int num_rounds = 1 << 17;
 	int stagnate = 0;
 
 	monte_carlo m (historical_data, true);
@@ -163,7 +163,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 	// Fine pass
 	stagnate = 0;
-	num_rounds = 1 << 16;
+	num_rounds = 1 << 17;
 	while (stagnate < 10000) {
 		make_delta (delta, size);
 
@@ -187,7 +187,7 @@ void stochastic_optimization (std::vector < data_series > &historical_data, port
 
 		stagnate++;
 
-		if ((stagnate == 5000) && (num_rounds < 1 << 17)) {
+		if ((stagnate == 5000) && (num_rounds < 1 << 20)) {
 			num_rounds *= 2;
 			stagnate = 0;
 			printf ("rounds %d\n", num_rounds);
