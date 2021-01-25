@@ -3,6 +3,7 @@
 #include "evaluation.h"
 #include "includes.h"
 #include "loader.h"
+#include "make_3x.h"
 #include "monte_carlo.h"
 #include "portfolio.h"
 #include "stochastic_optimization.h"
@@ -12,10 +13,10 @@
 int main (int argc, char *argv[])
 {
 	srand (time (NULL));
-	char *read_filename = NULL, *write_filename = NULL;
+	char *read_filename = NULL, *write_filename = NULL, *make_filename = NULL;
 	float goal = 1.65f;	// default 65% target gain per year
 
-	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_backtest = false, need_test = false, need_stocks = false;
+	bool need_optimize = false, need_learn = false, need_read = false, need_write = false, need_evaluate = false, need_backtest = false, need_test = false, need_stocks = false, need_make_3x = false;
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp (argv[i], "-o"))
@@ -43,6 +44,10 @@ int main (int argc, char *argv[])
 		else if (!strcmp (argv[i], "-g")) {
 			i++;
 			goal = strtof (argv[i], NULL);
+		}
+		else if (!strcmp (argv[i], "-m")) {
+			need_make_3x = true;
+			make_filename = argv[i];
 		}
 	}
 
@@ -75,6 +80,9 @@ int main (int argc, char *argv[])
 
 	if (need_backtest)
 		backtest_portfolio (data, p);
+
+	if (need_make_3x)
+		make_3x (data, p, make_filename);
 
 	if (need_write)
 		p.write (write_filename, data);
