@@ -14,7 +14,7 @@
 #define GPU_SIMULATION_MAX_STOCKS 512
 
 // The maximum proportion of the portfolio allocated to a single investment
-#define PORTFOLIO_MAX_PROPORTION 0.5f
+#define PORTFOLIO_MAX_PROPORTION 0.4f
 
 // Below this proportion, we ignore an entry in the portfolio.
 // This is 0.1%
