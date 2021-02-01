@@ -8,6 +8,11 @@ uint64_t get_time_us ()
 	return tv.tv_sec * 1000000ULL + tv.tv_usec;
 }
 
+float frand ()
+{
+	return (rand () % 10000000) / 10000000.f;
+}
+
 static void print_char (float v)
 {
 	if (v >= 8.f / 8.f)
