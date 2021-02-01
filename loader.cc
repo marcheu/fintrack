@@ -197,6 +197,7 @@ void loader::load_csv (char *file_name, date start, date end, data_series & data
 	}
 
 	data.values = (float *) malloc (count * sizeof (float));
+	data.volumes = (float *) malloc (count * sizeof (float));
 	data.dates = (date *) malloc (count * sizeof (date));
 
 	rewind (f);
@@ -211,6 +212,7 @@ void loader::load_csv (char *file_name, date start, date end, data_series & data
 		if ((d >= start) && (d <= end)) {
 			assert (r == 9);
 			data.values[i] = close_price;
+			data.volumes[i] = volume;
 			data.dates[i] = d;
 			i++;
 		}

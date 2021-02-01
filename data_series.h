@@ -24,6 +24,7 @@ static char sector_name[][32] = {
 
 struct data_series {
 	float *values;
+	float *volumes;
 	date *dates;
 	int size;
 	date start;
