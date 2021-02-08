@@ -20,4 +20,7 @@
 // This is 0.1%
 #define PORTFOLIO_IGNORE_PROPORTION 0.001f
 
+// Directory where we put our temporary files
+#define TMP_DIR "tmp/"
+
 #endif

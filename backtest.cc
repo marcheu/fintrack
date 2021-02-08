@@ -1,4 +1,7 @@
 #include "backtest.h"
+#include "constants.h"
+
+
 
 static void write_portfolio (std::vector < data_series > &data, portfolio & p, const char *filename)
 {
@@ -27,27 +30,32 @@ static char *month_name (int month)
 
 void backtest_portfolio (std::vector < data_series > &data, portfolio & p)
 {
-	write_portfolio (data, p, "tmp_data.txt");
+	int r;
+
+	// Create temporary dir
+	r = system ("mkdir -p " TMP_DIR);
+
+	write_portfolio (data, p, TMP_DIR "tmp_data.txt");
 
 	portfolio my_portfolio;
 	my_portfolio.read ("portfolios/my_portfolio.txt", data);
 	my_portfolio.normalize ();
-	write_portfolio (data, my_portfolio, "tmp_my_data.txt");
+	write_portfolio (data, my_portfolio, TMP_DIR "tmp_my_data.txt");
 
 	portfolio hedgfundie;
 	hedgfundie.read ("portfolios/hedgfundie.txt", data);
 	hedgfundie.normalize ();
-	write_portfolio (data, hedgfundie, "tmp_hedg_data.txt");
+	write_portfolio (data, hedgfundie, TMP_DIR "tmp_hedg_data.txt");
 
 	portfolio tqqq;
 	tqqq.read ("portfolios/TQQQ.txt", data);
 	tqqq.normalize ();
-	write_portfolio (data, tqqq, "tmp_tqqq_data.txt");
+	write_portfolio (data, tqqq, TMP_DIR "tmp_tqqq_data.txt");
 
 	portfolio upro;
 	upro.read ("portfolios/UPRO.txt", data);
 	upro.normalize ();
-	write_portfolio (data, upro, "tmp_upro_data.txt");
+	write_portfolio (data, upro, TMP_DIR "tmp_upro_data.txt");
 
 	portfolio vti_portfolio;
 	for (unsigned stock = 0; stock < data.size (); stock++)
@@ -55,10 +63,10 @@ void backtest_portfolio (std::vector < data_series > &data, portfolio & p)
 			vti_portfolio.proportions[stock] = 1.0f;
 		else
 			vti_portfolio.proportions[stock] = 0.0f;
-	write_portfolio (data, vti_portfolio, "tmp_vti_data.txt");
+	write_portfolio (data, vti_portfolio, TMP_DIR "tmp_vti_data.txt");
 
 	char *cmd = (char *) calloc (1, 16384 * sizeof (char));
-	strcat (cmd, "gnuplot -background white <<- EOF\nset term x11 persist\nset xtics (");
+	strcpy (cmd, "gnuplot -background white <<- EOF\nset term x11 persist\nset xtics (");
 
 	int current_year = data[0].dates[0].year;
 	int current_month = data[0].dates[0].month;
@@ -80,11 +88,11 @@ void backtest_portfolio (std::vector < data_series > &data, portfolio & p)
 		}
 	}
 	strcat (cmd, "\" \" 9999)");
-	strcat (cmd, "\nset xtics rotate by 90 right\nset grid\nset tics scale 0\nset style line 12 lc rgb '#D8D8D8' lt 1 lw 1\nset grid back ls 12\nplot \"tmp_data.txt\" w l, \"tmp_vti_data.txt\" w l, \"tmp_my_data.txt\" w l, \"tmp_hedg_data.txt\" w l , \"tmp_tqqq_data.txt\" w l, \"tmp_upro_data.txt\" w l \nEOF");
+	strcat (cmd, "\nset xtics rotate by 90 right\nset grid\nset tics scale 0\nset style line 12 lc rgb '#D8D8D8' lt 1 lw 1\nset grid back ls 12\nplot \"" TMP_DIR "tmp_data.txt\" w l, \"" TMP_DIR "tmp_vti_data.txt\" w l, \"" TMP_DIR "tmp_my_data.txt\" w l, \"" TMP_DIR "tmp_hedg_data.txt\" w l , \"" TMP_DIR "tmp_tqqq_data.txt\" w l, \"" TMP_DIR "tmp_upro_data.txt\" w l \nEOF");
 
 	assert (strlen (cmd) < 16000);
 
-	int r = system (cmd);
+	r = system (cmd);
 	assert (!r);
 	free (cmd);
 }
