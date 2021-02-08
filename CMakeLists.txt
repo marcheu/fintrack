@@ -17,6 +17,8 @@ add_executable( fintrack
   main.cc
   monte_carlo.cu
   monte_carlo.h
+  neural_net.cc
+  neural_net.h
   portfolio.cc
   portfolio.h
   stochastic_optimization.cc
