@@ -21,6 +21,7 @@ etf_list = [
 'EZJ',
 'FAS',
 'GUSH',
+'IMTM',
 'INDL',
 'JNUG',
 'LABU',
