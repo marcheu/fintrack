@@ -37,6 +37,7 @@ etf_list = [
 'ROM',
 'RXL',
 'SAA',
+'SDG',
 'SOXL',
 'SSO',
 'TECL',
