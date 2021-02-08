@@ -17,5 +17,7 @@ void print_bar (float value);
 void print_histogram (std::vector < float >values);
 uint64_t get_time_us ();
 float frand ();
+void clear_line ();
+int next_power_of_two (int value);
 
 #endif

@@ -13,6 +13,20 @@ float frand ()
 	return (rand () % 10000000) / 10000000.f;
 }
 
+int next_power_of_two (int value)
+{
+	int ret = 1;
+	while (ret < value)
+		ret *= 2;
+
+	return ret;
+}
+
+void clear_line ()
+{
+	printf ("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+}
+
 static void print_char (float v)
 {
 	if (v >= 8.f / 8.f)
