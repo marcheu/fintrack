@@ -47,6 +47,7 @@ int main (int argc, char *argv[])
 		}
 		else if (!strcmp (argv[i], "-m")) {
 			need_make_3x = true;
+			i++;
 			make_filename = argv[i];
 		}
 	}
