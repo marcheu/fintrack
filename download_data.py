@@ -31,6 +31,7 @@ etf_list = [
 'MSEGX',
 'MVV',
 'NUGT',
+'PPA',
 'QLD',
 'QQQ',
 'RETL',
