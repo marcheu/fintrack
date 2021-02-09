@@ -54,6 +54,15 @@ class date {
 		return !(d1 <= d2);
 	}
 
+	int day_of_the_week () {
+		int adjustment, mm, yy;
+
+		adjustment = (14 - month) / 12;
+		mm = month + 12 * adjustment - 2;
+		yy = year - adjustment;
+		return (day + (13 * mm - 1) / 5 + yy + yy / 4 - yy / 100 + yy / 400 - 1) % 7;
+	}
+
 	void print () {
 		printf ("%4d-%02d-%02d ", year, month, day);
 	}
