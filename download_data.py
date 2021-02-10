@@ -84,6 +84,7 @@ etf_list = [
 'VIGAX',
 'VIIIX',
 'VIS',
+'^VIX',
 'VNQ',
 'VO',
 'VONG',
