@@ -57,6 +57,11 @@ void backtest_portfolio (std::vector < data_series > &data, portfolio & p)
 	upro.normalize ();
 	write_portfolio (data, upro, TMP_DIR "tmp_upro_data.txt");
 
+	portfolio vgt;
+	vgt.read ("portfolios/VGT.txt", data);
+	vgt.normalize ();
+	write_portfolio (data, vgt, TMP_DIR "tmp_vgt_data.txt");
+
 	portfolio vti_portfolio;
 	for (unsigned stock = 0; stock < data.size (); stock++)
 		if (!strcmp (data[stock].name, "VTI"))
@@ -88,7 +93,7 @@ void backtest_portfolio (std::vector < data_series > &data, portfolio & p)
 		}
 	}
 	strcat (cmd, "\" \" 9999)");
-	strcat (cmd, "\nset xtics rotate by 90 right\nset grid\nset tics scale 0\nset style line 12 lc rgb '#D8D8D8' lt 1 lw 1\nset grid back ls 12\nplot \"" TMP_DIR "tmp_data.txt\" w l, \"" TMP_DIR "tmp_vti_data.txt\" w l, \"" TMP_DIR "tmp_my_data.txt\" w l, \"" TMP_DIR "tmp_hedg_data.txt\" w l , \"" TMP_DIR "tmp_tqqq_data.txt\" w l, \"" TMP_DIR "tmp_upro_data.txt\" w l \nEOF");
+	strcat (cmd, "\nset xtics rotate by 90 right\nset grid\nset tics scale 0\nset style line 12 lc rgb '#D8D8D8' lt 1 lw 1\nset grid back ls 12\nplot \"" TMP_DIR "tmp_data.txt\" w l, \"" TMP_DIR "tmp_vti_data.txt\" w l, \"" TMP_DIR "tmp_my_data.txt\" w l, \"" TMP_DIR "tmp_hedg_data.txt\" w l , \"" TMP_DIR "tmp_tqqq_data.txt\" w l, \"" TMP_DIR "tmp_upro_data.txt\" w l, \"" TMP_DIR "tmp_vgt_data.txt\" w l \nEOF");
 
 	assert (strlen (cmd) < 16000);
 
