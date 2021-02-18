@@ -1,6 +1,6 @@
 #include "neural_net.h"
 
-neural_net::neural_net (int num_input_neurons, int num_output_neurons, int num_hidden_layers, int num_hidden_neurons[])
+neural_net::neural_net (int num_input_neurons, int num_output_neurons, int num_hidden_layers, int num_hidden_neurons[], char *file_name)
 {
 	assert (num_input_neurons > 0);
 	assert (num_hidden_layers > 0);
@@ -84,6 +84,8 @@ neural_net::neural_net (int num_input_neurons, int num_output_neurons, int num_h
 			create_link (ib, io);
 		}
 	}
+
+	output_file_ = strdup (file_name);
 }
 
 void neural_net::forward_propagation (float *input_values, float *output_values)
@@ -381,7 +383,7 @@ int neural_net::num_links ()
 
 void neural_net::write_to_disk ()
 {
-	FILE *f = fopen ("nets/neural_net.bin", "wb");
+	FILE *f = fopen (output_file_, "wb");
 
 	fwrite (&num_neurons_, sizeof (num_neurons_), 1, f);
 	fwrite (&num_input_neurons_, sizeof (num_input_neurons_), 1, f);
@@ -402,9 +404,9 @@ void neural_net::write_to_disk ()
 	fclose (f);
 }
 
-void neural_net::read_from_disk ()
+int neural_net::read_from_disk ()
 {
-	FILE *f = fopen ("nets/neural_net.bin", "rb");
+	FILE *f = fopen (output_file_, "rb");
 	int ret = 1;
 
 	ret *= fread (&num_neurons_, sizeof (num_neurons_), 1, f);
@@ -423,7 +425,7 @@ void neural_net::read_from_disk ()
 	ret *= fread (weights_, num_links_ * sizeof (float), 1, f);
 	ret *= fread (steps_, num_links_ * sizeof (float), 1, f);
 
-	assert (ret);
-
 	fclose (f);
+
+	return ret;
 }

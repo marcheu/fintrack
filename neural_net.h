@@ -10,7 +10,7 @@
 
 class neural_net {
       public:
-	neural_net (int num_input_neurons, int num_output_neurons, int num_hidden_layers, int *num_hidden_neurons);
+	neural_net (int num_input_neurons, int num_output_neurons, int num_hidden_layers, int *num_hidden_neurons, char *file_name);
 
 	// Inference
 	void forward_propagation (float *input_values, float *output_values);
@@ -30,7 +30,7 @@ class neural_net {
 	int num_links ();
 
 	void write_to_disk ();
-	void read_from_disk ();
+	int read_from_disk ();
 
       private:
 	int num_neurons_;
@@ -53,6 +53,7 @@ class neural_net {
 	float *values_;
 	float *errors_;
 
+	char *output_file_;
 
 	enum neuron_type {
 		type_input,
