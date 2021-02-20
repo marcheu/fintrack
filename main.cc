@@ -5,9 +5,12 @@
 #include "loader.h"
 #include "make_3x.h"
 #include "monte_carlo.h"
+#include "neural_net.h"
 #include "portfolio.h"
+#include "problem.h"
 #include "stochastic_optimization.h"
 #include "tests.h"
+#include "training.h"
 #include "util.h"
 
 int main (int argc, char *argv[])
@@ -49,6 +52,28 @@ int main (int argc, char *argv[])
 			need_make_3x = true;
 			i++;
 			make_filename = argv[i];
+		}
+		else if (!strcmp (argv[i], "-n")) {
+			char output_file[1024] = "nets/";
+			i++;
+			strcat (output_file, argv[i]);
+			problem p = problem_prediction;
+			p.initialize (argv[i]);
+			neural_net n (p.num_inputs, p.num_outputs, p.num_hidden_layers, p.hidden_layer_neurons, output_file);
+			n.read_from_disk ();
+			training_backprop (p, n);
+		}
+		else if (!strcmp (argv[i], "-i")) {
+			char output_file[1024] = "nets/";
+			i++;
+			strcat (output_file, argv[i]);
+			problem p = problem_prediction;
+			p.initialize (argv[i]);
+			neural_net n (p.num_inputs, p.num_outputs, p.num_hidden_layers, p.hidden_layer_neurons, NULL);
+			int r = n.read_from_disk ();
+			assert (r);
+			for (int i = 0; i < 1000; i++)
+				p.inference (n);
 		}
 	}
 
