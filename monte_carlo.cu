@@ -6,6 +6,7 @@
 
 monte_carlo::monte_carlo (std::vector < data_series > &historical_data, bool use_gpu):historical_data_ (historical_data), use_gpu_ (use_gpu)
 {
+#ifdef __NVCC__
 	if (use_gpu_) {
 		unsigned num_stocks = historical_data_.size ();
 		int num_days = historical_data_[0].size;
@@ -17,16 +18,20 @@ monte_carlo::monte_carlo (std::vector < data_series > &historical_data, bool use
 
 		cudaMallocManaged (&gpu_portfolio_, num_stocks * sizeof (float));
 	}
+#endif
 }
 
 monte_carlo::~monte_carlo ()
 {
+#ifdef __NVCC__
 	if (use_gpu_) {
 		cudaFree (gpu_historical_data_);
 		cudaFree (gpu_portfolio_);
 	}
+#endif
 }
 
+#ifdef __NVCC__
 __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, int num_days, float *historical_data, int start_day, int days_back, float *portfolio, float *expectancy_list)
 {
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -64,6 +69,7 @@ __global__ void run_simulation (int seed, const int num_rounds, int num_stocks, 
 	// We simulated half a year, but expectanty is easier to read as returns per year
 	expectancy_list[round] = expectancy * expectancy;
 }
+#endif
 
 void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy_list, float &expectancy, float &standard_deviation, float &downside_deviation, float &downsize_75_deviation, int num_rounds, int days_back)
 {
@@ -71,6 +77,7 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 	days_back = min (num_days, days_back);
 	int start_day = num_days - days_back;
 
+#ifdef __NVCC__
 	if (use_gpu_) {
 		int num_stocks = historical_data_.size ();
 		assert (num_stocks < GPU_SIMULATION_MAX_STOCKS);
@@ -95,7 +102,9 @@ void monte_carlo::run_with_data (portfolio & p, std::vector < float >&expectancy
 
 		cudaFree (gpu_expectancy_list);
 	}
-	else {
+	else
+#endif
+	{
 		const int duration = MONTE_CARLO_SIMULATION_DURATION;
 		portfolio p2;
 

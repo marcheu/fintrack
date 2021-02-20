@@ -1,12 +1,17 @@
 APPNAME = fintrack
 SOURCES = $(shell find . -type f -name '*.cc'; find . -type f -name '*.cu' |xargs)
 HEADERS = $(shell find . -type f -name '*.h' |xargs)
+ifeq (, $(shell which nvcc))
+CXX = g++ -x c++
+OPT = -O3 $(INCLUDES) -Wall -ffast-math -Wsign-compare -Wpointer-arith -Wcast-qual -Wcast-align
+else
 CXX = nvcc
+OPT = -O3 $(INCLUDES) --compiler-options "-Wall -ffast-math -Wsign-compare -Wpointer-arith -Wcast-qual -Wcast-align"
+endif
 
 LIB = -lm -lpthread
 
 INCLUDES = -I/usr/include -I.
-OPT = -O3 $(INCLUDES) --compiler-options "-Wall -ffast-math -Wsign-compare -Wpointer-arith -Wcast-qual -Wcast-align"
 
 all:	$(APPNAME)
 	@wc $(SOURCES) $(HEADERS)
